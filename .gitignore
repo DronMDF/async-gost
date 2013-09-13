@@ -11,3 +11,6 @@
 *.lai
 *.la
 *.a
+
+async-gost.pro.user
+
