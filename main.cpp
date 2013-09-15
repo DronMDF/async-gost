@@ -1,3 +1,5 @@
+
+#include <chrono>
 #include <future>
 #include <iostream>
 #include <thread>
@@ -12,15 +14,17 @@ BOOST_AUTO_TEST_CASE(emptyTest)
 {
 }
 
+mutex flock;
+condition_variable fcond;
 queue<future<vector<uint8_t>>> futures;
 
 void data_loader()
 {
 	while(true) {
-		if(futures.size() < 1000) {
-			futures.push(async([](){ return vector<uint8_t>(1000, 255); }));
-		}
-		this_thread::yield();
+		unique_lock<mutex> guard(flock);
+		fcond.wait(guard, []{ return futures.size() < 1000; });
+		futures.push(async(launch::deferred, []{ return vector<uint8_t>(1000000, 255); }));
+		fcond.notify_one();
 	}
 }
 
@@ -32,17 +36,22 @@ int main(int argc, char **argv)
 
 	thread(data_loader).detach();
 
+	const auto interval = chrono::seconds(10); //minutes(1);
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+	const chrono::high_resolution_clock::time_point finish = start + interval;
 	unsigned loaded = 0;
-	while(true) {
-		if (!futures.empty()) {
-			const auto value = futures.front().get();
-			futures.pop();
-			loaded += value.size();
-			if (loaded % 1000000 == 0) {
-				cout << "loaded: " << loaded << ' ' << futures.size() << endl;
-			}
-		}
+	while (chrono::high_resolution_clock::now() < finish) {
+		unique_lock<mutex> guard(flock);
+		fcond.wait(guard, []{ return !futures.empty(); });
+		const auto value = futures.front().get();
+		futures.pop();
+		loaded += value.size();
+		fcond.notify_one();
 	}
+
+	cout << "loaded: " << loaded / chrono::duration_cast<chrono::seconds>(interval).count() * 8
+	     << ' ' << futures.size()
+	     << ' ' << chrono::duration_cast<chrono::microseconds>(finish - start).count()<< endl;
 
 	return 0;
 }
