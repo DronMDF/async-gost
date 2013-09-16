@@ -8,6 +8,7 @@
 #define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_ALTERNATIVE_INIT_API
 #include <boost/test/unit_test.hpp>
+#include "async-gost.hpp"
 
 using namespace std;
 
@@ -18,14 +19,18 @@ BOOST_AUTO_TEST_CASE(emptyTest)
 mutex flock;
 condition_variable fcond;
 array<uint8_t, 1024> splitter __attribute__((unused));
-queue<future<vector<uint8_t>>> futures;
+queue<future<ContextReply>> futures;
 
 void data_loader()
 {
+	vector<uint8_t> data(1500, 255);
+	vector<uint8_t> key(32, 128);
+	vector<uint8_t> iv(8, 0);
+
 	while(true) {
 		unique_lock<mutex> guard(flock);
 		fcond.wait(guard, []{ return futures.size() < 1000; });
-		futures.push(async(launch::deferred, []{ return vector<uint8_t>(1500, 255); }));
+		futures.push(async_cfb_encrypt(data, key, iv));
 		fcond.notify_one();
 	}
 }
