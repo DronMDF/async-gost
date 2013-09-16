@@ -1,4 +1,5 @@
 
+#include <array>
 #include <chrono>
 #include <future>
 #include <iostream>
@@ -16,6 +17,7 @@ BOOST_AUTO_TEST_CASE(emptyTest)
 
 mutex flock;
 condition_variable fcond;
+array<uint8_t, 1024> splitter __attribute__((unused));
 queue<future<vector<uint8_t>>> futures;
 
 void data_loader()
@@ -23,7 +25,7 @@ void data_loader()
 	while(true) {
 		unique_lock<mutex> guard(flock);
 		fcond.wait(guard, []{ return futures.size() < 1000; });
-		futures.push(async(launch::deferred, []{ return vector<uint8_t>(1000000, 255); }));
+		futures.push(async(launch::deferred, []{ return vector<uint8_t>(1500, 255); }));
 		fcond.notify_one();
 	}
 }
