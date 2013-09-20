@@ -5,10 +5,11 @@
 #include <iostream>
 #include <thread>
 #include <queue>
-#include <tbb/concurrent_queue.h>
+#include <boost/thread.hpp>
 #define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_ALTERNATIVE_INIT_API
 #include <boost/test/unit_test.hpp>
+#include <tbb/concurrent_queue.h>
 #include "async-gost.hpp"
 
 using namespace std;
@@ -26,7 +27,7 @@ void data_loader()
 	vector<uint8_t> key(32, 128);
 	vector<uint8_t> iv(8, 0);
 
-	while(true) {
+	while(!boost::this_thread::interruption_requested()) {
 		futures.push(async_cfb_encrypt(data, key, iv));
 	}
 }
@@ -37,7 +38,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	thread(data_loader).detach();
+	boost::thread loader(data_loader);
 
 	const auto interval = chrono::seconds(10); //minutes(1);
 	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
@@ -54,6 +55,13 @@ int main(int argc, char **argv)
 	     << ' ' << futures.size()
 	     << ' ' << chrono::duration_cast<chrono::microseconds>(finish - start).count()<< endl;
 
+	loader.interrupt();
+
+	// Чтобы тред не спал - его надо поднять из ожидания
+	shared_future<ContextReply> result;
+	futures.pop(result);
+
+	loader.join();
 	return 0;
 }
 
