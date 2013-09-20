@@ -1,17 +1,18 @@
 
-#define _POSIX_C_SOURCE 200112L
+#include <cstdint>
+//#include <time.h>
+//#include <stdio.h>
+//#include <stdint.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <assert.h>
 
-#include <time.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+using namespace std;
 
 typedef uint8_t gostiv_t[8];
 typedef uint32_t gostkey_t[8];
 
-// низкоуровневе функции ГОСТ
+// п╫п╦п╥п╨п╬я┐я─п╬п╡п╫п╣п╡п╣ я└я┐п╫п╨я├п╦п╦ п⌠п·п║п╒
 static __inline__
 uint32_t gost_step (const uint32_t elem1, const uint32_t elem2, const uint32_t key, const uint32_t *sbox)
 {
@@ -81,11 +82,10 @@ void gost_encrypt_cfb(const char *in, char *out, size_t size,
 		      const gostkey_t key, gostiv_t iv, uint32_t *n, const uint32_t *tab) 
 {
 	if (size < 16 - *n) {
-		/* нет смысла извращаться */
+		/* п╫п╣я┌ я│п╪я▀я│п╩п╟ п╦п╥п╡я─п╟я┴п╟я┌я▄я│я▐ */
 		while (size--) {
 			if (!(*n)) {
-				gost_encrypt_block((int *)iv, (int *)iv,
-						(const int *)key, tab);
+				gost_encrypt_block((uint32_t *)iv, (uint32_t *)iv, (const uint32_t *)key, tab);
 			}
 
 			iv[*n] = *(out++) = iv[*n] ^ *(in++);
@@ -93,7 +93,7 @@ void gost_encrypt_cfb(const char *in, char *out, size_t size,
 			(*n) &= 7;
 		}
 	} else {
-		/* есть хотя бы один полный блок */
+		/* п╣я│я┌я▄ я┘п╬я┌я▐ п╠я▀ п╬п╢п╦п╫ п©п╬п╩п╫я▀п╧ п╠п╩п╬п╨ */
 		if (*n) {
 			size -= 8 - *n;
 			while (*n != 8) {
@@ -103,18 +103,15 @@ void gost_encrypt_cfb(const char *in, char *out, size_t size,
 			*n = 0;
 		}
 		while (size & (~7)) {
-			gost_encrypt_block((int *)iv, (int *)iv,
-					(const int *)key, tab);
-			((int *)iv)[0] = ((int *)out)[0] = ((int *)iv)[0] ^
-				((int *)in)[0];
-			((int *)iv)[1] = ((int *)out)[1] = ((int *)iv)[1] ^
-				((int *)in)[1];
+			gost_encrypt_block((uint32_t *)iv, (uint32_t *)iv, (const uint32_t *)key, tab);
+			((uint32_t *)iv)[0] = ((uint32_t *)out)[0] = ((uint32_t *)iv)[0] ^ ((uint32_t *)in)[0];
+			((uint32_t *)iv)[1] = ((uint32_t *)out)[1] = ((uint32_t *)iv)[1] ^ ((uint32_t *)in)[1];
 			size -= 8;
 			in += 8;
 			out += 8;
 		}
 		if (size) {
-			gost_encrypt_block((int *)iv, (int *)iv, (const int *)key, tab);
+			gost_encrypt_block((uint32_t *)iv, (uint32_t *)iv, (const uint32_t *)key, tab);
 			while (size--) {
 				iv[*n] = *(out++) = iv[*n] ^ *(in++);
 				(*n)++;
@@ -131,12 +128,12 @@ void gost_imit_long(const char *buf, size_t size, const gostkey_t key, const uin
 	char *result = (char *)rv;
 	for (size_t i = 0; i < size; i++) {
 		if (n == 8) {
-			gost_imit_block((int *)result, (int *)result, (const int *)key, tab);
+			gost_imit_block((uint32_t *)result, (uint32_t *)result, (const uint32_t *)key, tab);
 		}
 		n &= 7;
 		result[n++] ^= buf[i];
 	}
-	gost_imit_block((int *)result, (int *)result, (const int *)key, tab);
+	gost_imit_block((uint32_t *)result, (uint32_t *)result, (const uint32_t *)key, tab);
 }
 
 void expand_tab(const char sbox[64], uint32_t tab[256], int shift) 
@@ -157,7 +154,7 @@ void gost_set_sbox(const char sbox[64], uint32_t *tab)
 	expand_tab(sbox, tab + 768, 3);
 }
 
-static const char FapsiSubst[] = {
+static const uint8_t FapsiSubst[] = {
 	0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
 	0xff, 0xbe, 0x65, 0x5c, 0xe5, 0x2c, 0xb9, 0x20,
 	0x89, 0x57, 0x16, 0xb3, 0x11, 0xf3, 0x98, 0x06,
@@ -168,16 +165,16 @@ static const char FapsiSubst[] = {
 	0xba, 0x30, 0x2f, 0x12, 0x56, 0x8b, 0x44, 0x8d
 };
 
-static uint32_t Key05[] __attribute__((aligned(128)))= { 
-	0xE0F67504,
-	0xFAFB3850,
-	0x90C3C7D2,
-	0x3DCAB3ED,
-	0x42124715,
-	0x8A1EAE91,
-	0x9ECD792F,
-	0xBDEFBCD2
-};
+//static uint32_t Key05[] __attribute__((aligned(128)))= {
+//	0xE0F67504,
+//	0xFAFB3850,
+//	0x90C3C7D2,
+//	0x3DCAB3ED,
+//	0x42124715,
+//	0x8A1EAE91,
+//	0x9ECD792F,
+//	0xBDEFBCD2
+//};
 
 static const uint32_t S01[] = { 
 	0xC3A7802A, 0x47E3A8FF 
@@ -218,46 +215,46 @@ static const uint32_t CFB_Test05[] = {
 	0x5548EB99, 0x0FAA6CD9
 };
 
-static uint32_t IMIT_Test06[] = {
-	0x46738F54
-};
+//static uint32_t IMIT_Test06[] = {
+//	0x46738F54
+//};
 
-int main(int argc, char **argv)
-{
-	static char buf[1024] __attribute__((aligned(32))) = {0};
+//int main(int argc, char **argv)
+//{
+//	static char buf[1024] __attribute__((aligned(32))) = {0};
 	
-	static uint32_t tab[256 * 4] __attribute__((aligned(128)));
-	gost_set_sbox(FapsiSubst, tab);
+//	static uint32_t tab[256 * 4] __attribute__((aligned(128)));
+//	gost_set_sbox(FapsiSubst, tab);
 	
-	gostiv_t iv;
-	memcpy(&iv, S01, sizeof(iv));
+//	gostiv_t iv;
+//	memcpy(&iv, S01, sizeof(iv));
 	
-	unsigned int n = 0;
+//	unsigned int n = 0;
 
-	// Потестируем правильность алгоритмов.
-	gost_encrypt_cfb((const char *)Text01, buf, sizeof(Text01), Key05, iv, &n, tab);
-	assert(memcmp(buf, CFB_Test05, sizeof(CFB_Test05)) == 0);
+//	// п÷п╬я┌п╣я│я┌п╦я─я┐п╣п╪ п©я─п╟п╡п╦п╩я▄п╫п╬я│я┌я▄ п╟п╩пЁп╬я─п╦я┌п╪п╬п╡.
+//	gost_encrypt_cfb((const char *)Text01, buf, sizeof(Text01), Key05, iv, &n, tab);
+//	assert(memcmp(buf, CFB_Test05, sizeof(CFB_Test05)) == 0);
 	
-	gost_imit_long((const char *)Text02, sizeof(Text02), Key05, tab, (uint32_t *)iv);
-	assert(memcmp(iv, IMIT_Test06, sizeof(IMIT_Test06)) == 0);
+//	gost_imit_long((const char *)Text02, sizeof(Text02), Key05, tab, (uint32_t *)iv);
+//	assert(memcmp(iv, IMIT_Test06, sizeof(IMIT_Test06)) == 0);
 		
-	// Алгоритмы корректные - поехали.
-	struct timespec start;
-	clock_gettime(CLOCK_REALTIME, &start);
+//	// п░п╩пЁп╬я─п╦я┌п╪я▀ п╨п╬я─я─п╣п╨я┌п╫я▀п╣ - п©п╬п╣я┘п╟п╩п╦.
+//	struct timespec start;
+//	clock_gettime(CLOCK_REALTIME, &start);
 	
-	// меряем на гигабайте...
-	for (int i = 0; i < 1024 * 1024; i++) {
-		gost_encrypt_cfb(buf, buf, sizeof(buf), Key05, iv, &n, tab);
-		gost_imit_long(buf, sizeof(buf), Key05, tab, (uint32_t *)&iv);
-	}
+//	// п╪п╣я─я▐п╣п╪ п╫п╟ пЁп╦пЁп╟п╠п╟п╧я┌п╣...
+//	for (int i = 0; i < 1024 * 1024; i++) {
+//		gost_encrypt_cfb(buf, buf, sizeof(buf), Key05, iv, &n, tab);
+//		gost_imit_long(buf, sizeof(buf), Key05, tab, (uint32_t *)&iv);
+//	}
 	
-	struct timespec stop;
-	clock_gettime(CLOCK_REALTIME, &stop);
+//	struct timespec stop;
+//	clock_gettime(CLOCK_REALTIME, &stop);
 	
-	double run_time = (stop.tv_sec - start.tv_sec) + (double)(stop.tv_nsec - start.tv_nsec) / 1000000000.0;
-	double bps = 1024 * 1024 * 1024 / run_time;
-	double bitps = bps * 8;
+//	double run_time = (stop.tv_sec - start.tv_sec) + (double)(stop.tv_nsec - start.tv_nsec) / 1000000000.0;
+//	double bps = 1024 * 1024 * 1024 / run_time;
+//	double bitps = bps * 8;
 	
-	printf("throughput: %.3f megabit/sec\n", bitps / 1000000);;
-	return 0;
-}
+//	printf("throughput: %.3f megabit/sec\n", bitps / 1000000);;
+//	return 0;
+//}
