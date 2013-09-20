@@ -5,6 +5,7 @@
 #include <iostream>
 #include <thread>
 #include <queue>
+#include <tbb/concurrent_queue.h>
 #define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_ALTERNATIVE_INIT_API
 #include <boost/test/unit_test.hpp>
@@ -16,22 +17,17 @@ BOOST_AUTO_TEST_CASE(emptyTest)
 {
 }
 
-mutex flock;
-condition_variable fcond;
-array<uint8_t, 1024> splitter __attribute__((unused));
-queue<future<ContextReply>> futures;
+tbb::concurrent_bounded_queue<shared_future<ContextReply>> futures;
 
 void data_loader()
 {
+	futures.set_capacity(1000);
 	vector<uint8_t> data(1500, 255);
 	vector<uint8_t> key(32, 128);
 	vector<uint8_t> iv(8, 0);
 
 	while(true) {
-		unique_lock<mutex> guard(flock);
-		fcond.wait(guard, []{ return futures.size() < 1000; });
 		futures.push(async_cfb_encrypt(data, key, iv));
-		fcond.notify_one();
 	}
 }
 
@@ -48,12 +44,10 @@ int main(int argc, char **argv)
 	const chrono::high_resolution_clock::time_point finish = start + interval;
 	unsigned loaded = 0;
 	while (chrono::high_resolution_clock::now() < finish) {
-		unique_lock<mutex> guard(flock);
-		fcond.wait(guard, []{ return !futures.empty(); });
-		const auto value = futures.front().get();
-		futures.pop();
+		shared_future<ContextReply> result;
+		futures.pop(result);
+		const auto value = result.get();
 		loaded += value.size();
-		fcond.notify_one();
 	}
 
 	cout << "loaded: " << loaded / chrono::duration_cast<chrono::seconds>(interval).count() * 8
