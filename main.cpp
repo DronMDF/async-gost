@@ -14,10 +14,6 @@
 
 using namespace std;
 
-BOOST_AUTO_TEST_CASE(emptyTest)
-{
-}
-
 tbb::concurrent_bounded_queue<shared_future<ContextReply>> futures;
 
 void data_loader()
