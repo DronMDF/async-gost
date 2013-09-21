@@ -43,6 +43,20 @@ uint32_t GostGenericEngine::step(uint32_t elem1, uint32_t elem2, uint32_t key) c
 			tab4[(tmp >> 24) & 0xff];
 }
 
+void GostGenericEngine::imit()
+{
+	for (int i = 0; i < 2; i++) {
+		iv[1] = step(iv[1], iv[0], key[0]);
+		iv[0] = step(iv[0], iv[1], key[1]);
+		iv[1] = step(iv[1], iv[0], key[2]);
+		iv[0] = step(iv[0], iv[1], key[3]);
+		iv[1] = step(iv[1], iv[0], key[4]);
+		iv[0] = step(iv[0], iv[1], key[5]);
+		iv[1] = step(iv[1], iv[0], key[6]);
+		iv[0] = step(iv[0], iv[1], key[7]);
+	}
+}
+
 void GostGenericEngine::encrypt()
 {
 	swap(iv[0], iv[1]);
@@ -67,4 +81,3 @@ void GostGenericEngine::encrypt()
 	iv[0] = step(iv[0], iv[1], key[1]);
 	iv[1] = step(iv[1], iv[0], key[0]);
 }
-

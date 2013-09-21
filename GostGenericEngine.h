@@ -10,6 +10,7 @@ public:
 	uint32_t iv[2];
 	uint32_t key[8];
 
+	void imit();
 	void encrypt();
 private:
 	void expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const;
