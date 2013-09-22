@@ -2,6 +2,7 @@
 #include "async-gost.hpp"
 #include <cstring>
 #include <boost/test/unit_test.hpp>
+#include <tbb/concurrent_queue.h>
 #include "GostGenericEngine.h"
 
 using namespace std;
@@ -121,18 +122,34 @@ BOOST_AUTO_TEST_CASE(testGostShouldImit)
 }
 
 // Это основной интерфейс библиотеки
+struct ContextRequest {
+	promise<ContextReply> result;
+	vector<uint8_t> data;
+	vector<uint8_t> key;
+	vector<uint8_t> iv;
+};
+
 static vector<thread> crypto_threads;
+static tbb::concurrent_queue<shared_ptr<ContextRequest>> crypto_encrypt_tasks;
 
 void crypto_thread_encrypt()
 {
 	while(true) {
-		 this_thread::sleep_for(chrono::seconds(1));
+		shared_ptr<ContextRequest> request;
+		if (crypto_encrypt_tasks.try_pop(request)) {
+			ContextReply reply;
+			reply.data = gost_encrypt_cfb(request->data, request->key, request->iv);
+			request->result.set_value(reply);
+		} else {
+			this_thread::sleep_for(chrono::microseconds(1));
+		}
 	}
 }
 
 void add_crypto_thread()
 {
 	crypto_threads.push_back(thread(crypto_thread_encrypt));
+	crypto_threads.back().detach();
 }
 
 future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
@@ -146,6 +163,10 @@ future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector
 		});
 	}
 
-	// TODO: Добавить задание на шифрование в очередь
-	throw logic_error("Не определен формат очереди заданий шифратора");
+	auto request = make_shared<ContextRequest>();
+	request->data = data;
+	request->key = key;
+	request->iv = iv;
+	crypto_encrypt_tasks.push(request);
+	return request->result.get_future();
 }
