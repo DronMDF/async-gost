@@ -48,16 +48,6 @@ vector<uint8_t> gost_imit(const vector<uint8_t> &data, const vector<uint8_t> &ke
 	return out;
 }
 
-future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
-	const vector<uint8_t> &iv)
-{
-	return async([data, key, iv]{
-		ContextReply reply;
-		reply.data = gost_encrypt_cfb(data, key, iv);
-		return reply;
-	});
-}
-
 BOOST_AUTO_TEST_CASE(testGostShouldEncrypt)
 {
 	// Given
@@ -128,4 +118,34 @@ BOOST_AUTO_TEST_CASE(testGostShouldImit)
 	const vector<uint8_t> expected = { 0x54, 0x8F, 0x73, 0x46 };
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(imit.begin(), imit.begin() + expected.size(),
 					expected.begin(), expected.end());
+}
+
+// Это основной интерфейс библиотеки
+static vector<thread> crypto_threads;
+
+void crypto_thread_encrypt()
+{
+	while(true) {
+		 this_thread::sleep_for(chrono::seconds(1));
+	}
+}
+
+void add_crypto_thread()
+{
+	crypto_threads.push_back(thread(crypto_thread_encrypt));
+}
+
+future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
+	const vector<uint8_t> &iv)
+{
+	if (crypto_threads.empty()) {
+		return async([data, key, iv]{
+			ContextReply reply;
+			reply.data = gost_encrypt_cfb(data, key, iv);
+			return reply;
+		});
+	}
+
+	// TODO: Добавить задание на шифрование в очередь
+	throw logic_error("Не определен формат очереди заданий шифратора");
 }

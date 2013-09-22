@@ -13,5 +13,7 @@ public:
 	}
 };
 
+void add_crypto_thread();
+
 std::future<ContextReply> async_cfb_encrypt(const std::vector<uint8_t> &data, const std::vector<uint8_t> &key,
 	const std::vector<uint8_t> &iv);

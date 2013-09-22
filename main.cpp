@@ -34,6 +34,8 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+	add_crypto_thread();
+
 	boost::thread loader(data_loader);
 
 	const auto interval = chrono::seconds(10); //minutes(1);
