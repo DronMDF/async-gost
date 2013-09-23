@@ -3,29 +3,35 @@
 #include <chrono>
 #include <future>
 #include <iostream>
-#include <thread>
 #include <queue>
-#include <boost/thread.hpp>
 #define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_ALTERNATIVE_INIT_API
 #include <boost/test/unit_test.hpp>
-#include <tbb/concurrent_queue.h>
 #include "async-gost.hpp"
 
 using namespace std;
+using namespace std::chrono;
 
-tbb::concurrent_bounded_queue<shared_future<ContextReply>> futures;
-
-void data_loader()
+size_t encrypt_loader(const seconds &interval)
 {
-	futures.set_capacity(1000);
-	vector<uint8_t> data(1500, 255);
-	vector<uint8_t> key(32, 128);
-	vector<uint8_t> iv(8, 0);
+	size_t encrypted = 0;
+	queue<future<ContextReply>> eq;
+	// Данные для шифрования
+	const vector<uint8_t> data(1500, 255);
+	const vector<uint8_t> key(32, 128);
+	const vector<uint8_t> iv(8, 0);
 
-	while(!boost::this_thread::interruption_requested()) {
-		futures.push(async_cfb_encrypt(data, key, iv));
+	const high_resolution_clock::time_point finish = high_resolution_clock::now() + interval;
+	while (high_resolution_clock::now() < finish) {
+		if (eq.size() < 1000) {
+			eq.push(async_cfb_encrypt(data, key, iv));
+		} else {
+			const auto value = eq.back().get();
+			encrypted += value.size();
+			eq.pop();
+		}
 	}
+	return encrypted;
 }
 
 int main(int argc, char **argv)
@@ -36,30 +42,12 @@ int main(int argc, char **argv)
 
 	add_crypto_thread();
 
-	boost::thread loader(data_loader);
+	const auto interval = seconds(10);
 
-	const auto interval = chrono::seconds(10); //minutes(1);
-	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
-	const chrono::high_resolution_clock::time_point finish = start + interval;
-	unsigned loaded = 0;
-	while (chrono::high_resolution_clock::now() < finish) {
-		shared_future<ContextReply> result;
-		futures.pop(result);
-		const auto value = result.get();
-		loaded += value.size();
-	}
+	auto rr = async(encrypt_loader, ref(interval));
+	auto loaded = rr.get();
 
-	cout << "loaded: " << loaded / chrono::duration_cast<chrono::seconds>(interval).count() * 8
-	     << ' ' << futures.size()
-	     << ' ' << chrono::duration_cast<chrono::microseconds>(finish - start).count()<< endl;
+	cout << "loaded: " << loaded / interval.count() * 8 / 1000 << " Kbit/sec" << endl;
 
-	loader.interrupt();
-
-	// Чтобы тред спокойно умер - его надо поднять из ожидания (костыльно немного)
-	shared_future<ContextReply> result;
-	futures.pop(result);
-
-	loader.join();
 	return 0;
 }
-
