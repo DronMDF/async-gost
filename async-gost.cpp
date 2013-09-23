@@ -130,19 +130,16 @@ struct ContextRequest {
 };
 
 static vector<thread> crypto_threads;
-static tbb::concurrent_queue<shared_ptr<ContextRequest>> crypto_encrypt_tasks;
+static tbb::concurrent_bounded_queue<shared_ptr<ContextRequest>> crypto_encrypt_tasks;
 
 void crypto_thread_encrypt()
 {
 	while(true) {
 		shared_ptr<ContextRequest> request;
-		if (crypto_encrypt_tasks.try_pop(request)) {
-			ContextReply reply;
-			reply.data = gost_encrypt_cfb(request->data, request->key, request->iv);
-			request->result.set_value(reply);
-		} else {
-			this_thread::sleep_for(chrono::microseconds(1));
-		}
+		crypto_encrypt_tasks.pop(request);
+		ContextReply reply;
+		reply.data = gost_encrypt_cfb(request->data, request->key, request->iv);
+		request->result.set_value(reply);
 	}
 }
 
