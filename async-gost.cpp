@@ -20,10 +20,10 @@ vector<uint8_t> gost_encrypt_cfb(const vector<uint8_t> &data, const vector<uint8
 	uint32_t i[2];
 	for (size_t index = 0; index < size; index += 8) {
 		engine.encrypt();
-		memcpy(&i[0], &data[index], min(size - index, 8U));
+		memcpy(&i[0], &data[index], min(size - index, size_t(8)));
 		engine.iv[0] ^= i[0];
 		engine.iv[1] ^= i[1];
-		memcpy(&out[index], &engine.iv[0], min(size - index, 8U));
+		memcpy(&out[index], &engine.iv[0], min(size - index, size_t(8)));
 	}
 
 	return out;
@@ -38,7 +38,7 @@ vector<uint8_t> gost_imit(const vector<uint8_t> &data, const vector<uint8_t> &ke
 	const size_t size = data.size();
 	for (size_t index = 0; index < size; index += 8) {
 		uint32_t i[2] = {0, 0};
-		memcpy(&i[0], &data[index], min(size - index, 8U));
+		memcpy(&i[0], &data[index], min(size - index, size_t(8)));
 		engine.iv[0] ^= i[0];
 		engine.iv[1] ^= i[1];
 		engine.imit();
