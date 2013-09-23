@@ -3,6 +3,7 @@
 #include <cstring>
 #include <boost/test/unit_test.hpp>
 #include <tbb/concurrent_queue.h>
+#include "CryptoRequest.h"
 #include "GostGenericEngine.h"
 
 using namespace std;
@@ -130,16 +131,26 @@ struct ContextRequest {
 };
 
 static vector<thread> crypto_threads;
-static tbb::concurrent_bounded_queue<shared_ptr<ContextRequest>> crypto_encrypt_tasks;
+static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_encrypt_tasks;
 
 void crypto_thread_encrypt()
 {
+	GostGenericEngine engine;
+	shared_ptr<CryptoRequest> request;
 	while(true) {
-		shared_ptr<ContextRequest> request;
-		crypto_encrypt_tasks.pop(request);
-		ContextReply reply;
-		reply.data = gost_encrypt_cfb(request->data, request->key, request->iv);
-		request->result.set_value(reply);
+		if (!request) {
+			crypto_encrypt_tasks.pop(request);
+			engine.init(request);
+		}
+
+		engine.load(request);
+		engine.encrypt();
+		engine.save(request);
+
+		if (request->isDone()) {
+			request->submit();
+			request.reset();
+		}
 	}
 }
 
@@ -160,10 +171,7 @@ future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector
 		});
 	}
 
-	auto request = make_shared<ContextRequest>();
-	request->data = data;
-	request->key = key;
-	request->iv = iv;
+	auto request = make_shared<CryptoRequest>(data, key, iv);
 	crypto_encrypt_tasks.push(request);
-	return request->result.get_future();
+	return request->get_future();
 }

@@ -1,5 +1,9 @@
+
 #include "GostGenericEngine.h"
+
+#include <cstring>
 #include <utility>
+#include "CryptoRequest.h"
 
 using namespace std;
 
@@ -80,4 +84,23 @@ void GostGenericEngine::encrypt()
 	iv[1] = step(iv[1], iv[0], key[2]);
 	iv[0] = step(iv[0], iv[1], key[1]);
 	iv[1] = step(iv[1], iv[0], key[0]);
+}
+
+void GostGenericEngine::init(shared_ptr<const CryptoRequest> request)
+{
+	const auto request_key = request->getKey();
+	memcpy(&key[0], &request_key[0], 32);
+}
+
+void GostGenericEngine::load(shared_ptr<const CryptoRequest> request)
+{
+	const auto data = request->getData();
+	memcpy(&iv[0], &data[0], 8);
+}
+
+void GostGenericEngine::save(shared_ptr<CryptoRequest> request)
+{
+	vector<uint8_t> data(8);
+	memcpy(&data[0], &iv[0], 8);
+	request->setData(data);
 }

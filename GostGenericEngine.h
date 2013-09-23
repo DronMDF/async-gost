@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <memory>
+
+class CryptoRequest;
 
 class GostGenericEngine
 {
@@ -12,6 +15,11 @@ public:
 
 	void imit();
 	void encrypt();
+
+	void init(std::shared_ptr<const CryptoRequest> request);
+	void load(std::shared_ptr<const CryptoRequest> request);
+	void save(std::shared_ptr<CryptoRequest> request);
+
 private:
 	void expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const;
 	void set_sbox(const uint8_t sbox[64]);

@@ -8,9 +8,11 @@ LIBS += -lboost_unit_test_framework -lboost_thread -ltbb
 
 SOURCES += main.cpp \
     async-gost.cpp \
-    GostGenericEngine.cpp
+    GostGenericEngine.cpp \
+    CryptoRequest.cpp
 
 HEADERS += \
     async-gost.hpp \
-    GostGenericEngine.h
+    GostGenericEngine.h \
+    CryptoRequest.h
 
