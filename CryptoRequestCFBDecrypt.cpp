@@ -3,8 +3,10 @@
 #include "async-gost.hpp"
 #include "CryptoEngineSlot.h"
 
-CryptoRequestCFBDecrypt::CryptoRequestCFBDecrypt(const std::vector<uint8_t> &source,
-	const std::vector<uint8_t> &key, const std::vector<uint8_t> &init)
+using namespace std;
+
+CryptoRequestCFBDecrypt::CryptoRequestCFBDecrypt(const vector<uint8_t> &source,
+	const vector<uint8_t> &key, const vector<uint8_t> &init)
 	: size(source.size()), index(0), key(key),
 	  iv({*reinterpret_cast<const uint32_t *>(&init[0]),
 		*reinterpret_cast<const uint32_t *>(&init[4])})

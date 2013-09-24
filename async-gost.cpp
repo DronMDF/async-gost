@@ -5,6 +5,7 @@
 #include <tbb/concurrent_queue.h>
 #include "CryptoEngineGeneric.h"
 #include "CryptoRequest.h"
+#include "CryptoRequestCFBDecrypt.h"
 #include "CryptoRequestCFBEncrypt.h"
 
 using namespace std;
@@ -113,6 +114,29 @@ future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector
 	const vector<uint8_t> &iv)
 {
 	auto request = make_shared<CryptoRequestCFBEncrypt>(data, key, iv);
+
+	if (crypto_threads.empty()) {
+		// Режим без выделенных потоков
+		return async([request]{
+			CryptoEngineGeneric engine;
+			request->init(&engine.slot);
+			while(!request->isDone()) {
+				engine.encrypt();
+				request->update(&engine.slot);
+			}
+			request->submit();
+			return request->get_future().get();
+		});
+	}
+
+	crypto_encrypt_tasks.push(request);
+	return request->get_future();
+}
+
+future<ContextReply> async_cfb_decrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
+	const vector<uint8_t> &iv)
+{
+	auto request = make_shared<CryptoRequestCFBDecrypt>(data, key, iv);
 
 	if (crypto_threads.empty()) {
 		// Режим без выделенных потоков
