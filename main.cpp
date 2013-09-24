@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	//add_crypto_thread();
+	add_crypto_thread();
 
 	encrypt_test();
 

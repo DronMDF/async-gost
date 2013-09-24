@@ -10,11 +10,13 @@ SOURCES += main.cpp \
     async-gost.cpp \
     GostGenericEngine.cpp \
     CryptoRequest.cpp \
-    CryptoEngineSlot.cpp
+    CryptoEngineSlot.cpp \
+    CryptoRequestCFBEncrypt.cpp
 
 HEADERS += \
     async-gost.hpp \
     GostGenericEngine.h \
     CryptoRequest.h \
-    CryptoEngineSlot.h
+    CryptoEngineSlot.h \
+    CryptoRequestCFBEncrypt.h
 

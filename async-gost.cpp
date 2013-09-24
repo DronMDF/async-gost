@@ -4,6 +4,7 @@
 #include <boost/test/unit_test.hpp>
 #include <tbb/concurrent_queue.h>
 #include "CryptoRequest.h"
+#include "CryptoRequestCFBEncrypt.h"
 #include "GostGenericEngine.h"
 
 using namespace std;
@@ -111,7 +112,7 @@ void add_crypto_thread()
 future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
 	const vector<uint8_t> &iv)
 {
-	auto request = make_shared<CryptoRequest>(data, key, iv);
+	auto request = make_shared<CryptoRequestCFBEncrypt>(data, key, iv);
 
 	if (crypto_threads.empty()) {
 		// Режим без выделенных потоков

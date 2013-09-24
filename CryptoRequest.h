@@ -1,9 +1,6 @@
 
 #pragma once
-#include <cstdint>
-#include <cstddef>
 #include <future>
-#include <vector>
 
 class ContextReply;
 class CryptoEngineSlot;
@@ -11,22 +8,14 @@ class CryptoEngineSlot;
 class CryptoRequest
 {
 public:
-	CryptoRequest(const std::vector<uint8_t> &data, const std::vector<uint8_t> &key,
-		      const std::vector<uint8_t> &iv);
-
 	std::future<ContextReply> get_future();
 
-	void init(CryptoEngineSlot *slot) const;
-	void update(CryptoEngineSlot *slot);
+	virtual void init(CryptoEngineSlot *slot) const = 0;
+	virtual void update(CryptoEngineSlot *slot) = 0;
 
-	bool isDone() const;
-	void submit();
+	virtual bool isDone() const = 0;
+	virtual void submit() = 0;
 
-private:
+protected:
 	std::promise<ContextReply> result;
-	size_t size;
-	size_t index;
-	std::vector<uint8_t> key;
-	std::vector<uint32_t> iv;
-	std::vector<uint32_t> data;
 };
