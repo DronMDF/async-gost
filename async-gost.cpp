@@ -3,15 +3,15 @@
 #include <cstring>
 #include <boost/test/unit_test.hpp>
 #include <tbb/concurrent_queue.h>
+#include "CryptoEngineGeneric.h"
 #include "CryptoRequest.h"
 #include "CryptoRequestCFBEncrypt.h"
-#include "GostGenericEngine.h"
 
 using namespace std;
 
 vector<uint8_t> gost_imit(const vector<uint8_t> &data, const vector<uint8_t> &key)
 {
-	GostGenericEngine engine;
+	CryptoEngineGeneric engine;
 	memcpy(&engine.key[0], &key[0], 32);
 	memset(&engine.iv[0], 0, 8);
 
@@ -85,7 +85,7 @@ static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_encrypt_t
 
 void crypto_thread_encrypt()
 {
-	GostGenericEngine engine;
+	CryptoEngineGeneric engine;
 	shared_ptr<CryptoRequest> request;
 	while(true) {
 		if (!request) {
@@ -117,7 +117,7 @@ future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector
 	if (crypto_threads.empty()) {
 		// Режим без выделенных потоков
 		return async([request]{
-			GostGenericEngine engine;
+			CryptoEngineGeneric engine;
 			request->init(&engine.slot);
 			while(!request->isDone()) {
 				engine.encrypt();

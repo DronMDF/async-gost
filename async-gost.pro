@@ -8,15 +8,15 @@ LIBS += -lboost_unit_test_framework -ltbb
 
 SOURCES += main.cpp \
     async-gost.cpp \
-    GostGenericEngine.cpp \
     CryptoRequest.cpp \
     CryptoEngineSlot.cpp \
-    CryptoRequestCFBEncrypt.cpp
+    CryptoRequestCFBEncrypt.cpp \
+    CryptoEngineGeneric.cpp
 
 HEADERS += \
     async-gost.hpp \
-    GostGenericEngine.h \
     CryptoRequest.h \
     CryptoEngineSlot.h \
-    CryptoRequestCFBEncrypt.h
+    CryptoRequestCFBEncrypt.h \
+    CryptoEngineGeneric.h
 

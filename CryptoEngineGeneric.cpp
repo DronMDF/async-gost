@@ -1,5 +1,5 @@
 
-#include "GostGenericEngine.h"
+#include "CryptoEngineGeneric.h"
 
 #include <cstring>
 #include <utility>
@@ -7,7 +7,7 @@
 
 using namespace std;
 
-GostGenericEngine::GostGenericEngine()
+CryptoEngineGeneric::CryptoEngineGeneric()
 	: slot(&key[0], &iv[0], &iv[1])
 {
 	const uint8_t FapsiSubst[] = {
@@ -24,7 +24,7 @@ GostGenericEngine::GostGenericEngine()
 	set_sbox(FapsiSubst);
 }
 
-void GostGenericEngine::expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const
+void CryptoEngineGeneric::expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const
 {
 	for (int i = 0; i < 256; i++) {
 		tab[i] = (sbox[(i / 16) * 4 + shift] & 0xf0) + (sbox[(i % 16) * 4 + shift] & 0x0f);
@@ -33,7 +33,7 @@ void GostGenericEngine::expand_tab(const uint8_t sbox[64], uint32_t tab[256], in
 	}
 }
 
-void GostGenericEngine::set_sbox(const uint8_t sbox[64])
+void CryptoEngineGeneric::set_sbox(const uint8_t sbox[64])
 {
 	expand_tab(sbox, tab1, 0);
 	expand_tab(sbox, tab2, 1);
@@ -41,14 +41,14 @@ void GostGenericEngine::set_sbox(const uint8_t sbox[64])
 	expand_tab(sbox, tab4, 3);
 }
 
-uint32_t GostGenericEngine::step(uint32_t elem1, uint32_t elem2, uint32_t key) const
+uint32_t CryptoEngineGeneric::step(uint32_t elem1, uint32_t elem2, uint32_t key) const
 {
 	const uint32_t tmp = key + elem2;
 	return elem1 ^ tab1[tmp & 0xff] ^ tab2[(tmp >> 8) & 0xff] ^ tab3[(tmp >> 16) & 0xff] ^
 			tab4[(tmp >> 24) & 0xff];
 }
 
-void GostGenericEngine::imit()
+void CryptoEngineGeneric::imit()
 {
 	for (int i = 0; i < 2; i++) {
 		iv[1] = step(iv[1], iv[0], key[0]);
@@ -62,7 +62,7 @@ void GostGenericEngine::imit()
 	}
 }
 
-void GostGenericEngine::encrypt()
+void CryptoEngineGeneric::encrypt()
 {
 	swap(iv[0], iv[1]);
 

@@ -5,10 +5,10 @@
 
 class CryptoRequest;
 
-class GostGenericEngine
+class CryptoEngineGeneric
 {
 public:
-	GostGenericEngine();
+	CryptoEngineGeneric();
 
 	// Это контекст шифратора - надо подумать как предоставлять его для модификации пользователями
 	uint32_t iv[2];
