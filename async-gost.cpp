@@ -110,10 +110,11 @@ void add_crypto_thread()
 	crypto_threads.back().detach();
 }
 
-future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
+template<typename R>
+future<ContextReply> async_cfb(const vector<uint8_t> &data, const vector<uint8_t> &key,
 	const vector<uint8_t> &iv)
 {
-	auto request = make_shared<CryptoRequestCFBEncrypt>(data, key, iv);
+	auto request = make_shared<R>(data, key, iv);
 
 	if (crypto_threads.empty()) {
 		// Режим без выделенных потоков
@@ -133,25 +134,14 @@ future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector
 	return request->get_future();
 }
 
+future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
+	const vector<uint8_t> &iv)
+{
+	return async_cfb<CryptoRequestCFBEncrypt>(data, key, iv);
+}
+
 future<ContextReply> async_cfb_decrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
 	const vector<uint8_t> &iv)
 {
-	auto request = make_shared<CryptoRequestCFBDecrypt>(data, key, iv);
-
-	if (crypto_threads.empty()) {
-		// Режим без выделенных потоков
-		return async([request]{
-			CryptoEngineGeneric engine;
-			request->init(&engine.slot);
-			while(!request->isDone()) {
-				engine.encrypt();
-				request->update(&engine.slot);
-			}
-			request->submit();
-			return request->get_future().get();
-		});
-	}
-
-	crypto_encrypt_tasks.push(request);
-	return request->get_future();
+	return async_cfb<CryptoRequestCFBDecrypt>(data, key, iv);
 }
