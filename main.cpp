@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	add_crypto_thread();
+	//add_crypto_thread();
 
 	encrypt_test();
 
@@ -77,7 +77,8 @@ int main(int argc, char **argv)
 
 	auto rr1 = async(launch::async, encrypt_loader, ref(interval));
 	auto rr2 = async(launch::async, encrypt_loader, ref(interval));
-	auto loaded = rr1.get() + rr2.get();
+	auto rr3 = async(launch::async, encrypt_loader, ref(interval));
+	auto loaded = rr1.get() + rr2.get() + rr3.get();
 
 	cout << "loaded: " << loaded / interval.count() * 8 / 1000 << " Kbit/sec" << endl;
 

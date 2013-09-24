@@ -162,15 +162,22 @@ void add_crypto_thread()
 future<ContextReply> async_cfb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key,
 	const vector<uint8_t> &iv)
 {
+	auto request = make_shared<CryptoRequest>(data, key, iv);
+
 	if (crypto_threads.empty()) {
-		return async([data, key, iv]{
-			ContextReply reply;
-			reply.data = gost_encrypt_cfb(data, key, iv);
-			return reply;
+		// Режим без выделенных потоков
+		return async([request]{
+			GostGenericEngine engine;
+			request->init(&engine.slot);
+			while(!request->isDone()) {
+				engine.encrypt();
+				request->update(&engine.slot);
+			}
+			request->submit();
+			return request->get_future().get();
 		});
 	}
 
-	auto request = make_shared<CryptoRequest>(data, key, iv);
 	crypto_encrypt_tasks.push(request);
 	return request->get_future();
 }
