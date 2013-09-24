@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include "CryptoEngineSlot.h"
 
 class CryptoRequest;
 
@@ -12,13 +13,10 @@ public:
 	// Это контекст шифратора - надо подумать как предоставлять его для модификации пользователями
 	uint32_t iv[2];
 	uint32_t key[8];
+	CryptoEngineSlot slot;
 
 	void imit();
 	void encrypt();
-
-	void init(std::shared_ptr<const CryptoRequest> request);
-	void load(std::shared_ptr<const CryptoRequest> request);
-	void save(std::shared_ptr<CryptoRequest> request);
 
 private:
 	void expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const;

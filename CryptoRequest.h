@@ -6,6 +6,7 @@
 #include <vector>
 
 class ContextReply;
+class CryptoEngineSlot;
 
 class CryptoRequest
 {
@@ -14,16 +15,18 @@ public:
 		      const std::vector<uint8_t> &iv);
 
 	std::future<ContextReply> get_future();
-	std::vector<uint8_t> getKey() const;
-	std::vector<uint8_t> getData() const;
-	void setData(const std::vector<uint8_t> &data);
+
+	void init(CryptoEngineSlot *slot) const;
+	void update(CryptoEngineSlot *slot);
+
 	bool isDone() const;
 	void submit();
 
 private:
 	std::promise<ContextReply> result;
-	std::vector<uint8_t> data;
-	std::vector<uint8_t> key;
-	std::vector<uint8_t> iv;
+	size_t size;
 	size_t index;
+	std::vector<uint8_t> key;
+	std::vector<uint32_t> iv;
+	std::vector<uint32_t> data;
 };

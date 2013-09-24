@@ -8,6 +8,7 @@
 using namespace std;
 
 GostGenericEngine::GostGenericEngine()
+	: slot(&key[0], &iv[0], &iv[1])
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
@@ -84,23 +85,4 @@ void GostGenericEngine::encrypt()
 	iv[1] = step(iv[1], iv[0], key[2]);
 	iv[0] = step(iv[0], iv[1], key[1]);
 	iv[1] = step(iv[1], iv[0], key[0]);
-}
-
-void GostGenericEngine::init(shared_ptr<const CryptoRequest> request)
-{
-	const auto request_key = request->getKey();
-	memcpy(&key[0], &request_key[0], 32);
-}
-
-void GostGenericEngine::load(shared_ptr<const CryptoRequest> request)
-{
-	const auto data = request->getData();
-	memcpy(&iv[0], &data[0], 8);
-}
-
-void GostGenericEngine::save(shared_ptr<CryptoRequest> request)
-{
-	vector<uint8_t> data(8);
-	memcpy(&data[0], &iv[0], 8);
-	request->setData(data);
 }

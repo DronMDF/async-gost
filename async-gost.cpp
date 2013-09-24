@@ -140,12 +140,11 @@ void crypto_thread_encrypt()
 	while(true) {
 		if (!request) {
 			crypto_encrypt_tasks.pop(request);
-			engine.init(request);
+			request->init(&engine.slot);
 		}
 
-		engine.load(request);
 		engine.encrypt();
-		engine.save(request);
+		request->update(&engine.slot);
 
 		if (request->isDone()) {
 			request->submit();
