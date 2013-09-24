@@ -11,12 +11,14 @@ SOURCES += main.cpp \
     CryptoRequest.cpp \
     CryptoEngineSlot.cpp \
     CryptoRequestCFBEncrypt.cpp \
-    CryptoEngineGeneric.cpp
+    CryptoEngineGeneric.cpp \
+    CryptoRequestCFBDecrypt.cpp
 
 HEADERS += \
     async-gost.hpp \
     CryptoRequest.h \
     CryptoEngineSlot.h \
     CryptoRequestCFBEncrypt.h \
-    CryptoEngineGeneric.h
+    CryptoEngineGeneric.h \
+    CryptoRequestCFBDecrypt.h
 
