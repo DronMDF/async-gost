@@ -26,7 +26,7 @@ void CryptoRequestCFBDecrypt::update(CryptoEngineSlot *slot)
 {
 	const uint32_t A = data[index];
 	const uint32_t B = data[index + 1];
-	slot->xorBlock(&data[index], &data[index + 1]);
+	slot->xorData(&data[index], &data[index + 1]);
 	slot->setBlock(A, B);
 	index += 2;
 }

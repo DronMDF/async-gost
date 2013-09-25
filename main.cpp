@@ -91,6 +91,29 @@ size_t encrypt_loader(const seconds &interval)
 	return encrypted;
 }
 
+size_t decrypt_loader(const seconds &interval)
+{
+	size_t encrypted = 0;
+	queue<future<ContextReply>> eq;
+	// Данные для шифрования
+	const vector<uint8_t> data(1500, 255);
+	const vector<uint8_t> key(32, 128);
+	const vector<uint8_t> iv(8, 0);
+
+	const high_resolution_clock::time_point finish = high_resolution_clock::now() + interval;
+	while (high_resolution_clock::now() < finish) {
+		while (eq.size() < 100) {
+			eq.push(async_cfb_decrypt(data, key, iv));
+		}
+
+		const auto value = eq.back().get();
+		encrypted += value.data.size();
+		eq.pop();
+	}
+
+	return encrypted;
+}
+
 int main(int argc, char **argv)
 {
 	if (boost::unit_test::unit_test_main([](){ return true; }, argc, argv) != 0) {
@@ -105,7 +128,7 @@ int main(int argc, char **argv)
 	const auto interval = seconds(30);
 
 	auto rr1 = async(launch::async, encrypt_loader, ref(interval));
-	auto rr2 = async(launch::async, encrypt_loader, ref(interval));
+	auto rr2 = async(launch::async, decrypt_loader, ref(interval));
 	auto rr3 = async(launch::async, encrypt_loader, ref(interval));
 	auto loaded = rr1.get() + rr2.get() + rr3.get();
 

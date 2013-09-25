@@ -23,7 +23,8 @@ void CryptoRequestCFBEncrypt::init(CryptoEngineSlot *slot) const
 
 void CryptoRequestCFBEncrypt::update(CryptoEngineSlot *slot)
 {
-	slot->xorBlock(&data[index], &data[index + 1]);
+	slot->xorBlock(data[index], data[index + 1]);
+	slot->getData(&data[index], &data[index + 1]);
 	index += 2;
 }
 
