@@ -1,5 +1,6 @@
 #pragma once
 #include "CryptoRequest.h"
+#include <vector>
 
 class CryptoRequestCFBEncrypt : public CryptoRequest
 {

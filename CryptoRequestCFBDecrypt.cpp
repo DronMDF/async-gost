@@ -1,6 +1,6 @@
 
 #include "CryptoRequestCFBDecrypt.h"
-#include "async-gost.hpp"
+#include "async-gost.h"
 #include "CryptoEngineSlot.h"
 
 using namespace std;

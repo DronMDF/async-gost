@@ -1,5 +1,5 @@
 
-#include "async-gost.hpp"
+#include "async-gost.h"
 #include <cstring>
 #include <boost/test/unit_test.hpp>
 #include <tbb/concurrent_queue.h>

@@ -16,11 +16,11 @@ SOURCES += main.cpp \
     CryptoRequestECBEncrypt.cpp
 
 HEADERS += \
-    async-gost.hpp \
     CryptoRequest.h \
     CryptoEngineSlot.h \
     CryptoRequestCFBEncrypt.h \
     CryptoEngineGeneric.h \
     CryptoRequestCFBDecrypt.h \
-    CryptoRequestECBEncrypt.h
+    CryptoRequestECBEncrypt.h \
+    async-gost.h
 
