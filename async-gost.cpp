@@ -7,6 +7,7 @@
 #include "CryptoRequest.h"
 #include "CryptoRequestCFBDecrypt.h"
 #include "CryptoRequestCFBEncrypt.h"
+#include "CryptoRequestECBEncrypt.h"
 
 using namespace std;
 
@@ -144,4 +145,25 @@ future<ContextReply> async_cfb_decrypt(const vector<uint8_t> &data, const vector
 	const vector<uint8_t> &iv)
 {
 	return async_cfb<CryptoRequestCFBDecrypt>(data, key, iv);
+}
+
+future<ContextReply> async_ecb_encrypt(const vector<uint8_t> &data, const vector<uint8_t> &key)
+{
+	auto request = make_shared<CryptoRequestECBEncrypt>(data, key);
+
+	if (crypto_threads.empty()) {
+		return async([request]{
+			CryptoEngineGeneric engine;
+			request->init(&engine.slot);
+			while(!request->isDone()) {
+				engine.encrypt();
+				request->update(&engine.slot);
+			}
+			request->submit();
+			return request->get_future().get();
+		});
+	}
+
+	crypto_encrypt_tasks.push(request);
+	return request->get_future();
 }

@@ -34,10 +34,10 @@ void test_cfb_encrypt()
 		0x3B, 0x4C, 0x22, 0x43, 0x10, 0xBD, 0x64, 0x4B,
 		0x99, 0xEB, 0x48, 0x55, 0xD9, 0x6C, 0xAA, 0x0F };
 	if (!equal(result.begin(), result.end(), expected.begin())) {
-		throw runtime_error("Шифратор сломался");
+		throw runtime_error("Шифратор CFB сломался");
 	}
 
-	cout << "Шифратор работает хорошо." << endl;
+	cout << "Шифратор CFB работает хорошо." << endl;
 }
 
 void test_cfb_decrypt()
@@ -62,10 +62,34 @@ void test_cfb_decrypt()
 		0xCC, 0xCC, 0xCC, 0xCC, 0x33, 0x33, 0x33, 0x33,
 		0x33, 0x33, 0x33, 0x33, 0xCC, 0xCC, 0xCC, 0xCC 	};
 	if (!equal(result.begin(), result.end(), expected.begin())) {
-		throw runtime_error("Дешифратор сломался");
+		throw runtime_error("Дешифратор CFB сломался");
 	}
 
-	cout << "Дешифратор работает хорошо." << endl;
+	cout << "Дешифратор CFB работает хорошо." << endl;
+}
+
+void test_ecb_encrypt()
+{
+	// Given
+	const vector<uint8_t> text = {
+		0xCC, 0xCC, 0xCC, 0xCC, 0x33, 0x33, 0x33, 0x33,
+		0x33, 0x33, 0x33, 0x33, 0xCC, 0xCC, 0xCC, 0xCC 	};
+	const vector<uint8_t> key = {
+		0x04, 0x75, 0xF6, 0xE0, 0x50, 0x38, 0xFB, 0xFA,
+		0xD2, 0xC7, 0xC3, 0x90, 0xED, 0xB3, 0xCA, 0x3D,
+		0x15, 0x47, 0x12, 0x42, 0x91, 0xAE, 0x1E, 0x8A,
+		0x2F, 0x79, 0xCD, 0x9E, 0xD2, 0xBC, 0xEF, 0xBD };
+	// When
+	auto result_context = async_ecb_encrypt(text, key);
+	auto result = result_context.get().data;
+	// Then
+	const vector<uint8_t> expected = {
+		0xD9, 0xBE, 0x1E, 0x40, 0x7D, 0xD7, 0xF5, 0x56,
+		0x03, 0x05, 0x79, 0x4E, 0x18, 0x01, 0xFE, 0x73 };
+	if (!equal(result.begin(), result.end(), expected.begin())) {
+		throw runtime_error("Шифратор ECB сломался");
+	}
+	cout << "Шифратор ECB работает хорошо." << endl;
 }
 
 size_t encrypt_loader(const seconds &interval)
@@ -120,10 +144,17 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	add_crypto_thread();
-
+	// Прогоним тесты без потоков
 	test_cfb_encrypt();
 	test_cfb_decrypt();
+	test_ecb_encrypt();
+
+	add_crypto_thread();
+
+	// И тесты с потоками
+	test_cfb_encrypt();
+	test_cfb_decrypt();
+	test_ecb_encrypt();
 
 	const auto interval = seconds(30);
 
