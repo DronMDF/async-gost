@@ -32,8 +32,10 @@ static const vector<uint8_t> key05 = {
 	0xD2, 0xC7, 0xC3, 0x90, 0xED, 0xB3, 0xCA, 0x3D,
 	0x15, 0x47, 0x12, 0x42, 0x91, 0xAE, 0x1E, 0x8A,
 	0x2F, 0x79, 0xCD, 0x9E, 0xD2, 0xBC, 0xEF, 0xBD };
+
 static const vector<uint8_t> iv01 = {
 	0x2A, 0x80, 0xA7, 0xC3, 0xFF, 0xA8, 0xE3, 0x47, };
+
 static const vector<uint8_t> text01 = {
 	0xCC, 0xCC, 0xCC, 0xCC, 0x33, 0x33, 0x33, 0x33,
 	0x33, 0x33, 0x33, 0x33, 0xCC, 0xCC, 0xCC, 0xCC 	};
@@ -71,14 +73,12 @@ static const vector<uint8_t> text02 = {
 	0xf7, 0xf6, 0xf5, 0xf4, 0xf3, 0xf2, 0xf1, 0xf0,
 	0xfF, 0xfE, 0xfD, 0xfC, 0xfB, 0xfA, 0xf9, 0xf8 };
 
-//u_int32_t ECB_Test01[] = {
-//	0xF5FE5211, 0x17E8D02E,
-//	0x6390ED97, 0x3A962C89
-//};
-//u_int32_t ECB_Test02[] = {
-//	0x2A78B7E0, 0x800A0268,
-//	0x462DA336, 0xEAB90129
-//};
+static const vector<uint8_t> ecb01 = {
+	0x11, 0x52, 0xFE, 0xF5, 0x2E, 0xD0, 0xE8, 0x17,
+	0x97, 0xED, 0x90, 0x63, 0x89, 0x2C, 0x96, 0x3A };
+static const vector<uint8_t> ecb02 = {
+	0xE0, 0xB7, 0x78, 0x2A, 0x68, 0x02, 0x0A, 0x80,
+	0x36, 0xA3, 0x2D, 0x46, 0x29, 0x01, 0xB9, 0xEA };
 static const vector<uint8_t> ecb03 = {
 	0x97, 0xCF, 0xB8, 0x8B, 0x6B, 0xDA, 0x3C, 0x53,
 	0xB5, 0x7A, 0x40, 0xBE, 0x4F, 0x5B, 0x05, 0x5C };
@@ -143,21 +143,11 @@ static const vector<uint8_t> cfb05 = {
 	0x3B, 0x4C, 0x22, 0x43, 0x10, 0xBD, 0x64, 0x4B,
 	0x99, 0xEB, 0x48, 0x55, 0xD9, 0x6C, 0xAA, 0x0F };
 
-//u_int32_t IMIT_Test01[] = {
-//	0xFD4BBE83
-//};
-//u_int32_t IMIT_Test02[] = {
-//	0xA8B979F7
-//};
-//u_int32_t IMIT_Test03[] = {
-//	0xD461FE01
-//};
-//u_int32_t IMIT_Test04[] = {
-//	0x12394623
-//};
-//u_int32_t IMIT_Test05[] = {
-//	0x5AC9272C
-//};
+static const vector<uint8_t> imit01 = { 0x83, 0xBE, 0x4B, 0xFD };
+static const vector<uint8_t> imit02 = { 0xF7, 0x79, 0xB9, 0xA8 };
+static const vector<uint8_t> imit03 = { 0x01, 0xFE, 0x61, 0xD4 };
+static const vector<uint8_t> imit04 = { 0x23, 0x46, 0x39, 0x12 };
+static const vector<uint8_t> imit05 = { 0x2C, 0x27, 0xC9, 0x5A };
 static const vector<uint8_t> imit06 = { 0x54, 0x8F, 0x73, 0x46 };
 
 static
@@ -171,8 +161,8 @@ void crypto_one_test(const string &name, future<ContextReply> context, const vec
 
 void crypto_self_test()
 {
-	//crypto_one_test("ecb encrypt 1", async_ecb_encrypt(text01, key01), ecb01);
-	//crypto_one_test("ecb encrypt 2", async_ecb_encrypt(text01, key02), ecb02);
+	crypto_one_test("ecb encrypt 1", async_ecb_encrypt(text01, key01), ecb01);
+	crypto_one_test("ecb encrypt 2", async_ecb_encrypt(text01, key02), ecb02);
 	crypto_one_test("ecb encrypt 3", async_ecb_encrypt(text01, key03), ecb03);
 	crypto_one_test("ecb encrypt 4", async_ecb_encrypt(text01, key04), ecb04);
 	crypto_one_test("ecb encrypt 5", async_ecb_encrypt(text01, key05), ecb05);
@@ -190,10 +180,10 @@ void crypto_self_test()
 	//crypto_one_test("cfb decrypt 4", async_cfb_decrypt(cfb04, key04, iv01), text01);
 	crypto_one_test("cfb decrypt 5", async_cfb_decrypt(cfb05, key05, iv01), text01);
 
-	//crypto_one_test("imit 1", async_imit(text01, key01), imit01);
-	//crypto_one_test("imit 2", async_imit(text01, key02), imit02);
-	//crypto_one_test("imit 3", async_imit(text01, key03), imit03);
-	//crypto_one_test("imit 4", async_imit(text01, key04), imit04);
-	//crypto_one_test("imit 5", async_imit(text01, key05), imit05);
+	crypto_one_test("imit 1", async_imit(text01, key01), imit01);
+	crypto_one_test("imit 2", async_imit(text01, key02), imit02);
+	crypto_one_test("imit 3", async_imit(text01, key03), imit03);
+	crypto_one_test("imit 4", async_imit(text01, key04), imit04);
+	crypto_one_test("imit 5", async_imit(text01, key05), imit05);
 	crypto_one_test("imit 6", async_imit(text02, key05), imit06);
 }
