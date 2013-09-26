@@ -24,13 +24,13 @@ void CryptoEngineSlot::xorBlock(uint32_t A, uint32_t B)
 	*this->B ^= B;
 }
 
-void CryptoEngineSlot::xorData(uint32_t *A, uint32_t *B) const
+void CryptoEngineSlot::xorData(uint32_t * const A, uint32_t * const B) const
 {
 	*A ^= *this->A;
 	*B ^= *this->B;
 }
 
-void CryptoEngineSlot::getData(uint32_t *A, uint32_t *B) const
+void CryptoEngineSlot::getData(uint32_t * const A, uint32_t * const B) const
 {
 	*A = *this->A;
 	*B = *this->B;

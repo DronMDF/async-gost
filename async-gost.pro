@@ -13,7 +13,8 @@ SOURCES += main.cpp \
     CryptoRequestCFBEncrypt.cpp \
     CryptoEngineGeneric.cpp \
     CryptoRequestCFBDecrypt.cpp \
-    CryptoRequestECBEncrypt.cpp
+    CryptoRequestECBEncrypt.cpp \
+    CryptoRequestImit.cpp
 
 HEADERS += \
     CryptoRequest.h \
@@ -22,5 +23,6 @@ HEADERS += \
     CryptoEngineGeneric.h \
     CryptoRequestCFBDecrypt.h \
     CryptoRequestECBEncrypt.h \
-    async-gost.h
+    async-gost.h \
+    CryptoRequestImit.h
 

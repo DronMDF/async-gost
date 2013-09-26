@@ -11,7 +11,7 @@ CryptoRequestCFBEncrypt::CryptoRequestCFBEncrypt(const vector<uint8_t> &source,
 		*reinterpret_cast<const uint32_t *>(&init[4])})
 {
 	const uint32_t *data_ptr = reinterpret_cast<const uint32_t *>(&source[0]);
-	// В массиве data хранится четное количество 32-битных слов
+	// В массиве data хранится четное количество 32-битных слов (дополнение по барабану)
 	data.assign(data_ptr, data_ptr + ((size + 7) & ~7) / sizeof(uint32_t));
 }
 

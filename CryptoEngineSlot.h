@@ -11,8 +11,8 @@ public:
 	void setBlock(uint32_t A, uint32_t B);
 	void xorBlock(uint32_t A, uint32_t B);
 
-	void xorData(uint32_t *A, uint32_t *B) const;
-	void getData(uint32_t *A, uint32_t *B) const;
+	void xorData(uint32_t * const A, uint32_t * const B) const;
+	void getData(uint32_t * const A, uint32_t * const B) const;
 
 private:
 	uint32_t * const key;

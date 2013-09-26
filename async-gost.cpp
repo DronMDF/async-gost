@@ -8,6 +8,7 @@
 #include "CryptoRequestCFBDecrypt.h"
 #include "CryptoRequestCFBEncrypt.h"
 #include "CryptoRequestECBEncrypt.h"
+#include "CryptoRequestImit.h"
 
 using namespace std;
 
@@ -147,3 +148,20 @@ future<ContextReply> async_ecb_encrypt(const vector<uint8_t> &data, const vector
 {
 	return async_encrypt(make_shared<CryptoRequestECBEncrypt>(data, key));
 }
+
+future<ContextReply> async_imit(const vector<uint8_t> &data, const vector<uint8_t> &key)
+{
+	auto request = make_shared<CryptoRequestImit>(data, key);
+	// Режим без выделенных потоков (пока только он)
+	return async([request]{
+		CryptoEngineGeneric engine;
+		request->init(&engine.slot);
+		while(!request->isDone()) {
+			engine.imit();
+			request->update(&engine.slot);
+		}
+		request->submit();
+		return request->get_future().get();
+	});
+}
+

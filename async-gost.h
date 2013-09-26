@@ -18,3 +18,6 @@ std::future<ContextReply> async_cfb_decrypt(const std::vector<uint8_t> &data,
 	const std::vector<uint8_t> &key, const std::vector<uint8_t> &iv);
 std::future<ContextReply> async_ecb_encrypt(const std::vector<uint8_t> &data,
 	const std::vector<uint8_t> &key);
+std::future<ContextReply> async_imit(const std::vector<uint8_t> &data,
+	const std::vector<uint8_t> &key);
+
