@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     CryptoEngineGeneric.cpp \
     CryptoRequestCFBDecrypt.cpp \
     CryptoRequestECBEncrypt.cpp \
-    CryptoRequestImit.cpp
+    CryptoRequestImit.cpp \
+    CryptoTest.cpp
 
 HEADERS += \
     CryptoRequest.h \

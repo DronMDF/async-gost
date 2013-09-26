@@ -10,6 +10,8 @@ public:
 	std::vector<uint8_t> data;
 };
 
+void crypto_self_test();
+
 void add_crypto_thread();
 
 std::future<ContextReply> async_cfb_encrypt(const std::vector<uint8_t> &data,
