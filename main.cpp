@@ -150,19 +150,18 @@ size_t ecb_encrypt_loader(const seconds &interval)
 	return encrypted;
 }
 
-int main(int /*argc*/, char **/*argv*/)
+int main(int argc, char **argv)
 {
-	// Пока все тесты пригрохал и запуск раннера вызовет ошибку
-	// if (boost::unit_test::unit_test_main([](){ return true; }, argc, argv) != 0) {
-	//	return -1;
-	// }
+	if (boost::unit_test::unit_test_main([](){ return true; }, argc, argv) != 0) {
+		return -1;
+	}
 
 	crypto_self_test();
 	cout << "Тестирование без потоков прошло успешно;" << endl;
 
 	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
-	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
-	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
+	//add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
+	//add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
 	//add_crypto_thread(CRYPTO_ENGINE_IMIT_GENERIC);
 
 	// И тесты с потоками
@@ -179,11 +178,11 @@ int main(int /*argc*/, char **/*argv*/)
 
 	futures.set_capacity(1000);
 	thread loader1(infinity_loader, interval);
-	thread loader2(infinity_loader, interval);
-	auto rr = async(infinity_retriver, 2);
+	//thread loader2(infinity_loader, interval);
+	auto rr = async(infinity_retriver, 1);
 	auto rate = rr.get();
 	loader1.join();
-	loader2.join();
+	//loader2.join();
 	cout << "loaded: " << rate / 1000 << " Kbit/sec" << endl;
 
 	return 0;
