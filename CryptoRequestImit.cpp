@@ -1,5 +1,7 @@
 
 #include "CryptoRequestImit.h"
+#include <cassert>
+#include <cstring>
 #include "async-gost.h"
 #include "CryptoEngineSlot.h"
 
@@ -8,13 +10,14 @@ using namespace std;
 CryptoRequestImit::CryptoRequestImit(const vector<uint8_t> &source, const vector<uint8_t> &key)
 	: index(0), key(key), imit(8)
 {
-	const size_t size = source.size();
-	const uint32_t *data_ptr = reinterpret_cast<const uint32_t *>(&source[0]);
-	// В массиве data хранится четное количество 32-битных слов (данные дополняются нулями)
-	data.assign(data_ptr, data_ptr + ((size + 7) & ~7) / sizeof(uint32_t));
-	while (data.size() < 4) {
-		data.push_back(0);
-	}
+	const auto size = source.size();
+	// В массиве data хранится определенное количество двойных 32-битных слов
+	// Здесь нужно аккуратно переписывать данные, потому что нули в буфере имеют значение
+	// В отличии от cfb
+	const auto data_size = ((size + 7) & ~7) / sizeof(uint32_t);
+	assert(data_size % 2 == 0);
+	data.resize(max(data_size, 4LU), 0);
+	memcpy(&data[0], &source[0], size);
 }
 
 void CryptoRequestImit::init(CryptoEngineSlot *slot) const
