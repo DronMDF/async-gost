@@ -89,7 +89,8 @@ int main(int argc, char **argv)
 	// Прогоним тесты без потоков
 	crypto_self_test();
 
-	add_crypto_thread();
+	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
+	add_crypto_thread(CRYPTO_ENGINE_IMIT_GENERIC);
 
 	// И тесты с потоками
 	crypto_self_test();

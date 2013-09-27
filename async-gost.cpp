@@ -82,8 +82,7 @@ BOOST_AUTO_TEST_CASE(testGostShouldImit)
 }
 
 // Это основной интерфейс библиотеки
-
-static vector<thread> crypto_threads;
+static vector<thread> crypto_encrypt_threads;
 static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_encrypt_tasks;
 
 void crypto_thread_encrypt()
@@ -106,15 +105,48 @@ void crypto_thread_encrypt()
 	}
 }
 
-void add_crypto_thread()
+static vector<thread> crypto_imit_threads;
+static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_imit_tasks;
+
+void crypto_thread_imit()
 {
-	crypto_threads.push_back(thread(crypto_thread_encrypt));
-	crypto_threads.back().detach();
+	CryptoEngineGeneric engine;
+	shared_ptr<CryptoRequest> request;
+	while(true) {
+		if (!request) {
+			crypto_imit_tasks.pop(request);
+			request->init(&engine.slot);
+		}
+
+		engine.imit();
+		request->update(&engine.slot);
+
+		if (request->isDone()) {
+			request->submit();
+			request.reset();
+		}
+	}
+}
+
+void add_crypto_thread(crypto_engine_t type)
+{
+	switch (type) {
+		case CRYPTO_ENGINE_ENCRYPT_GENERIC:
+			crypto_encrypt_threads.push_back(thread(crypto_thread_encrypt));
+			crypto_encrypt_threads.back().detach();
+			break;
+		case CRYPTO_ENGINE_IMIT_GENERIC:
+			crypto_imit_threads.push_back(thread(crypto_thread_imit));
+			crypto_imit_threads.back().detach();
+			break;
+		default:
+			throw logic_error("Некорректный тип движка");
+	}
 }
 
 future<ContextReply> async_encrypt(const shared_ptr<CryptoRequest> &request)
 {
-	if (crypto_threads.empty()) {
+	if (crypto_encrypt_threads.empty()) {
 		// Режим без выделенных потоков
 		return async([request]{
 			CryptoEngineGeneric engine;
@@ -152,16 +184,21 @@ future<ContextReply> async_ecb_encrypt(const vector<uint8_t> &data, const vector
 future<ContextReply> async_imit(const vector<uint8_t> &data, const vector<uint8_t> &key)
 {
 	auto request = make_shared<CryptoRequestImit>(data, key);
-	// Режим без выделенных потоков (пока только он)
-	return async([request]{
-		CryptoEngineGeneric engine;
-		request->init(&engine.slot);
-		while(!request->isDone()) {
-			engine.imit();
-			request->update(&engine.slot);
-		}
-		request->submit();
-		return request->get_future().get();
-	});
+
+	if (crypto_imit_threads.empty()) {
+		return async([request]{
+			CryptoEngineGeneric engine;
+			request->init(&engine.slot);
+			while(!request->isDone()) {
+				engine.imit();
+				request->update(&engine.slot);
+			}
+			request->submit();
+			return request->get_future().get();
+		});
+	}
+
+	crypto_imit_tasks.push(request);
+	return request->get_future();
 }
 
