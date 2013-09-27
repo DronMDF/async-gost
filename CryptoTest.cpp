@@ -74,6 +74,7 @@ static const vector<uint8_t> text02 = {
 	0xfF, 0xfE, 0xfD, 0xfC, 0xfB, 0xfA, 0xf9, 0xf8 };
 static const vector<uint8_t> text03;	// Пустой текст
 static const vector<uint8_t> text04 = { 'a' };
+static const vector<uint8_t> text05(128, 'U');
 
 static const vector<uint8_t> ecb01 = {
 	0x11, 0x52, 0xFE, 0xF5, 0x2E, 0xD0, 0xE8, 0x17,
@@ -149,6 +150,12 @@ static const vector<uint8_t> imit05 = { 0x2C, 0x27, 0xC9, 0x5A };
 static const vector<uint8_t> imit06 = { 0x54, 0x8F, 0x73, 0x46 };
 static const vector<uint8_t> imit07 = { 0x95, 0x9f, 0xc3, 0xb2, 0x0b, 0x80, 0x23, 0xbb };
 static const vector<uint8_t> imit08 = { 0x8e, 0x1e, 0x46, 0xf0, 0xae, 0x52, 0xa9, 0xfe };
+static const vector<uint8_t> imit09 = { 0xba, 0x9c, 0xdb, 0x57, 0x07, 0x5e, 0x61, 0xaf };
+static const vector<uint8_t> imit10 = { 0x34, 0x79, 0x68, 0x21, 0x1f, 0xa9, 0x08, 0x28 };
+static const vector<uint8_t> imit11 = { 0x5e, 0x71, 0x85, 0x2d, 0x22, 0x59, 0xef, 0x44 };
+static const vector<uint8_t> imit12 = { 0x7b, 0x0c, 0x78, 0x17, 0xfe, 0x21, 0x59, 0x17 };
+static const vector<uint8_t> imit13 = { 0xbb, 0xc1, 0x5c, 0x14, 0x7e, 0x7d, 0xb0, 0x07 };
+static const vector<uint8_t> imit14 = { 0x01, 0x38, 0x77, 0x7d, 0xa3, 0xf0, 0xa4, 0x10 };
 
 static
 void crypto_one_test(const string &name, future<ContextReply> context, const vector<uint8_t> expected)
@@ -188,4 +195,17 @@ void crypto_self_test()
 	crypto_one_test("imit 6", async_imit(text02, key05), imit06);
 	crypto_one_test("imit 7", async_imit(text03, key05), imit07);
 	crypto_one_test("imit 8", async_imit(text04, key05), imit08);
+	crypto_one_test("imit 9", async_imit(text05, key05), imit09);
+
+	// Не хотелось забивать код здесь... но вектора не удобно инициализировать строками
+	const string str01 = "message digest";
+	crypto_one_test("imit 10", async_imit(vector<uint8_t>(str01.begin(), str01.end()), key05), imit10);
+	const string str02 = "The quick brown fox jumps over the lazy dog";
+	crypto_one_test("imit 11", async_imit(vector<uint8_t>(str02.begin(), str02.end()), key05), imit11);
+	const string str03 = "The quick brown fox jumps over the lazy cog";
+	crypto_one_test("imit 12", async_imit(vector<uint8_t>(str03.begin(), str03.end()), key05), imit12);
+	const string str04 = "This is message, length=32 bytes";
+	crypto_one_test("imit 13", async_imit(vector<uint8_t>(str04.begin(), str04.end()), key05), imit13);
+	const string str05 = "Suppose the original message has length = 50 bytes";
+	crypto_one_test("imit 14", async_imit(vector<uint8_t>(str05.begin(), str05.end()), key05), imit14);
 }
