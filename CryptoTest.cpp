@@ -123,22 +123,18 @@ static const vector<uint8_t> ecb05 = {
 //	0x58CA5F5A, 0xB22DB29A
 //};
 
-//u_int32_t CFB_Test01[] = {
-//	0x28A5FC57, 0xD6F0A95A,
-//	0x84626C1A, 0xC4DF8CC1
-//};
-//u_int32_t CFB_Test02[] = {
-//	0x3B6A55EC, 0x5508C3A5,
-//	0x2172F124, 0x8EA70D76
-//};
-//u_int32_t CFB_Test03[] = {
-//	0x6815713D, 0x0F11C424,
-//	0xB3A22BE2, 0xC2003BE0
-//};
-//u_int32_t CFB_Test04[] = {
-//	0x655F02F8, 0x25A67889,
-//	0x7C21350B, 0x79FBE22F
-//};
+static const vector<uint8_t> cfb01 = {
+	0x57, 0xFC, 0xA5, 0x28, 0x5A, 0xA9, 0xF0, 0xD6,
+	0x1A, 0x6C, 0x62, 0x84, 0xC1, 0x8C, 0xDF, 0xC4 };
+static const vector<uint8_t> cfb02 = {
+	0xEC, 0x55, 0x6A, 0x3B, 0xA5, 0xC3, 0x08, 0x55,
+	0x24, 0xF1, 0x72, 0x21, 0x76, 0x0D, 0xA7, 0x8E };
+static const vector<uint8_t> cfb03 = {
+	0x3D, 0x71, 0x15, 0x68, 0x24, 0xC4, 0x11, 0x0F,
+	0xE2, 0x2B, 0xA2, 0xB3, 0xE0, 0x3B, 0x00, 0xC2 };
+static const vector<uint8_t> cfb04 = {
+	0xF8, 0x02, 0x5F, 0x65, 0x89, 0x78, 0xA6, 0x25,
+	0x0B, 0x35, 0x21, 0x7C, 0x2F, 0xE2, 0xFB, 0x79 };
 static const vector<uint8_t> cfb05 = {
 	0x3B, 0x4C, 0x22, 0x43, 0x10, 0xBD, 0x64, 0x4B,
 	0x99, 0xEB, 0x48, 0x55, 0xD9, 0x6C, 0xAA, 0x0F };
@@ -168,16 +164,16 @@ void crypto_self_test()
 	crypto_one_test("ecb encrypt 5", async_ecb_encrypt(text01, key05), ecb05);
 	//crypto_one_test("ecb encrypt 6", async_ecb_encrypt(text02, key05), ecb06);
 
-	//crypto_one_test("cfb encrypt 1", async_cfb_encrypt(text01, key01, iv01), cfb01);
-	//crypto_one_test("cfb encrypt 2", async_cfb_encrypt(text01, key02, iv01), cfb02);
-	//crypto_one_test("cfb encrypt 3", async_cfb_encrypt(text01, key03, iv01), cfb03);
-	//crypto_one_test("cfb encrypt 4", async_cfb_encrypt(text01, key04, iv01), cfb04);
+	crypto_one_test("cfb encrypt 1", async_cfb_encrypt(text01, key01, iv01), cfb01);
+	crypto_one_test("cfb encrypt 2", async_cfb_encrypt(text01, key02, iv01), cfb02);
+	crypto_one_test("cfb encrypt 3", async_cfb_encrypt(text01, key03, iv01), cfb03);
+	crypto_one_test("cfb encrypt 4", async_cfb_encrypt(text01, key04, iv01), cfb04);
 	crypto_one_test("cfb encrypt 5", async_cfb_encrypt(text01, key05, iv01), cfb05);
 
-	//crypto_one_test("cfb decrypt 1", async_cfb_decrypt(cfb01, key01, iv01), text01);
-	//crypto_one_test("cfb decrypt 2", async_cfb_decrypt(cfb02, key02, iv01), text01);
-	//crypto_one_test("cfb decrypt 3", async_cfb_decrypt(cfb03, key03, iv01), text01);
-	//crypto_one_test("cfb decrypt 4", async_cfb_decrypt(cfb04, key04, iv01), text01);
+	crypto_one_test("cfb decrypt 1", async_cfb_decrypt(cfb01, key01, iv01), text01);
+	crypto_one_test("cfb decrypt 2", async_cfb_decrypt(cfb02, key02, iv01), text01);
+	crypto_one_test("cfb decrypt 3", async_cfb_decrypt(cfb03, key03, iv01), text01);
+	crypto_one_test("cfb decrypt 4", async_cfb_decrypt(cfb04, key04, iv01), text01);
 	crypto_one_test("cfb decrypt 5", async_cfb_decrypt(cfb05, key05, iv01), text01);
 
 	crypto_one_test("imit 1", async_imit(text01, key01), imit01);
