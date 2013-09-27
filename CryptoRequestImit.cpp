@@ -16,7 +16,7 @@ CryptoRequestImit::CryptoRequestImit(const vector<uint8_t> &source, const vector
 	// В отличии от cfb
 	const auto data_size = ((size + 7) & ~7) / sizeof(uint32_t);
 	assert(data_size % 2 == 0);
-	data.resize(max(data_size, 4LU), 0);
+	data.resize(max(data_size, size_t(4)), 0);
 	memcpy(&data[0], &source[0], size);
 }
 

@@ -1,4 +1,6 @@
 
+// g++ -march=native -mssse3 -flax-vector-conversions -o gost-avx gost-avx.cpp 
+
 #define _POSIX_C_SOURCE 200112L
 
 #include <time.h>
@@ -78,7 +80,7 @@ void gost_encrypt_block (uint32_t *block, const v4si *key, const v16qi *tab)
 // void gost_encrypt_cfb(const char *in, char *out, size_t size, const v4si *key, gostiv_t iv, uint32_t *n, const v16qi *tab) 
 // {
 // 	if (size < 16 - *n) {
-// 		/* ÎÅÔ ÓÍÙÓÌÁ ÉÚ×ÒÁÝÁÔØÓÑ */
+// 		/* Ð½ÐµÑ‚ ÑÐ¼Ñ‹ÑÐ»Ð° Ð¸Ð·Ð²Ñ€Ð°Ñ‰Ð°Ñ‚ÑŒÑÑ */
 // 		while (size--) {
 // 			if (!(*n)) {
 // 				gost_encrypt_block((uint32_t *)iv, key, tab);
@@ -89,7 +91,7 @@ void gost_encrypt_block (uint32_t *block, const v4si *key, const v16qi *tab)
 // 			(*n) &= 7;
 // 		}
 // 	} else {
-// 		/* ÅÓÔØ ÈÏÔÑ ÂÙ ÏÄÉÎ ÐÏÌÎÙÊ ÂÌÏË */
+// 		/* ÐµÑÑ‚ÑŒ Ñ…Ð¾Ñ‚Ñ Ð±Ñ‹ Ð¾Ð´Ð¸Ð½ Ð¿Ð¾Ð»Ð½Ñ‹Ð¹ Ð±Ð»Ð¾Ðº */
 // 		if (*n) {
 // 			size -= 8 - *n;
 // 			while (*n != 8) {
@@ -368,7 +370,7 @@ int main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 	static v16qi tab[4];
 	gost_set_sbox(FapsiSubst, tab);
 	
-	// ðÏÔÅÓÔÉÒÕÅÍ ÐÒÁ×ÉÌØÎÏÓÔØ ÁÌÇÏÒÉÔÍÏ×.
+	// ÐŸÐ¾Ñ‚ÐµÑÑ‚Ð¸Ñ€ÑƒÐµÐ¼ Ð¿Ñ€Ð°Ð²Ð¸Ð»ÑŒÐ½Ð¾ÑÑ‚ÑŒ Ð°Ð»Ð³Ð¾Ñ€Ð¸Ñ‚Ð¼Ð¾Ð².
 // 	uint32_t rv[2];
 // 	gost_imit_long((const char *)Text02, sizeof(Text02), Key05, tab, rv);
 // 	assert(memcmp(rv, IMIT_Test06, sizeof(IMIT_Test06)) == 0);
@@ -387,11 +389,11 @@ int main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 // 	gost_encrypt_cfb((const char *)Text01, buf, sizeof(Text01), Key05, iv, &n, tab);
 // 	assert(memcmp(buf, CFB_Test05, sizeof(CFB_Test05)) == 0);
 	
-	// áÌÇÏÒÉÔÍÙ ËÏÒÒÅËÔÎÙÅ - ÐÏÅÈÁÌÉ.
+	// ÐÐ»Ð³Ð¾Ñ€Ð¸Ñ‚Ð¼Ñ‹ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ðµ - Ð¿Ð¾ÐµÑ…Ð°Ð»Ð¸.
 	struct timespec start;
 	clock_gettime(CLOCK_REALTIME, &start);
 	
-	// ÍÅÒÑÅÍ ÎÁ ÇÉÇÁÂÁÊÔÅ...
+	// Ð¼ÐµÑ€ÑÐµÐ¼ Ð½Ð° Ð³Ð¸Ð³Ð°Ð±Ð°Ð¹Ñ‚Ðµ...
 	for (int i = 0; i < test_size / block_size; i++) {
 		gost_encrypt_ecb(buf, buf, sizeof(buf), Key05, tab);
 	}
