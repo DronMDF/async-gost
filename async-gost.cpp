@@ -78,6 +78,12 @@ void add_crypto_thread(crypto_engine_t type)
 
 future<ContextReply> async_encrypt(const shared_ptr<CryptoRequest> &request)
 {
+	if (request->isDone()) {
+		// Пустой запрос игнорируем.
+		request->submit();
+		return request->get_future();
+	}
+
 	if (crypto_encrypt_threads.empty()) {
 		// Режим без выделенных потоков
 		return async([request]{
@@ -135,4 +141,3 @@ future<ContextReply> async_imit(const vector<uint8_t> &data, const vector<uint8_
 	crypto_imit_tasks.push(request);
 	return request->get_future();
 }
-
