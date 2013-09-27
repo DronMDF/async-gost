@@ -72,6 +72,8 @@ static const vector<uint8_t> text02 = {
 	0xeF, 0xeE, 0xeD, 0xeC, 0xeB, 0xeA, 0xe9, 0xe8,
 	0xf7, 0xf6, 0xf5, 0xf4, 0xf3, 0xf2, 0xf1, 0xf0,
 	0xfF, 0xfE, 0xfD, 0xfC, 0xfB, 0xfA, 0xf9, 0xf8 };
+static const vector<uint8_t> text03;	// Пустой текст
+
 
 static const vector<uint8_t> ecb01 = {
 	0x11, 0x52, 0xFE, 0xF5, 0x2E, 0xD0, 0xE8, 0x17,
@@ -145,6 +147,7 @@ static const vector<uint8_t> imit03 = { 0x01, 0xFE, 0x61, 0xD4 };
 static const vector<uint8_t> imit04 = { 0x23, 0x46, 0x39, 0x12 };
 static const vector<uint8_t> imit05 = { 0x2C, 0x27, 0xC9, 0x5A };
 static const vector<uint8_t> imit06 = { 0x54, 0x8F, 0x73, 0x46 };
+static const vector<uint8_t> imit07 = { 0x95, 0x9f, 0xc3, 0xb2, 0x0b, 0x80, 0x23, 0xbb };
 
 static
 void crypto_one_test(const string &name, future<ContextReply> context, const vector<uint8_t> expected)
@@ -182,4 +185,5 @@ void crypto_self_test()
 	crypto_one_test("imit 4", async_imit(text01, key04), imit04);
 	crypto_one_test("imit 5", async_imit(text01, key05), imit05);
 	crypto_one_test("imit 6", async_imit(text02, key05), imit06);
+	crypto_one_test("imit 7", async_imit(text03, key05), imit07);
 }

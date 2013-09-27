@@ -12,6 +12,9 @@ CryptoRequestImit::CryptoRequestImit(const vector<uint8_t> &source, const vector
 	const uint32_t *data_ptr = reinterpret_cast<const uint32_t *>(&source[0]);
 	// В массиве data хранится четное количество 32-битных слов (данные дополняются нулями)
 	data.assign(data_ptr, data_ptr + ((size + 7) & ~7) / sizeof(uint32_t));
+	while (data.size() < 4) {
+		data.push_back(0);
+	}
 }
 
 void CryptoRequestImit::init(CryptoEngineSlot *slot) const
