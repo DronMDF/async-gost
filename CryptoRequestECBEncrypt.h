@@ -9,7 +9,8 @@ public:
 	CryptoRequestECBEncrypt(const std::vector<uint8_t> &source, const std::vector<uint8_t> &key);
 
 	void init(CryptoEngineSlot *slot) const override;
-	void update(CryptoEngineSlot *slot) override;
+	void load(CryptoEngineSlot *slot) const override;
+	void save(CryptoEngineSlot *slot) override;
 
 	bool isDone() const override;
 	void submit() override;

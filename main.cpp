@@ -86,14 +86,15 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	// Прогоним тесты без потоков
 	crypto_self_test();
+	cout << "Тестирование без потоков прошло успешно;" << endl;
 
 	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
 	add_crypto_thread(CRYPTO_ENGINE_IMIT_GENERIC);
 
 	// И тесты с потоками
 	crypto_self_test();
+	cout << "Тестирование с потоками прошло успешно;" << endl;
 
 	const auto interval = seconds(30);
 

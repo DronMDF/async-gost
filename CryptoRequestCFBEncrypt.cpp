@@ -18,13 +18,18 @@ CryptoRequestCFBEncrypt::CryptoRequestCFBEncrypt(const vector<uint8_t> &source,
 void CryptoRequestCFBEncrypt::init(CryptoEngineSlot *slot) const
 {
 	slot->setKey(&key[0]);
+}
+
+void CryptoRequestCFBEncrypt::load(CryptoEngineSlot *slot) const
+{
 	slot->setBlock(iv[0], iv[1]);
 }
 
-void CryptoRequestCFBEncrypt::update(CryptoEngineSlot *slot)
+void CryptoRequestCFBEncrypt::save(CryptoEngineSlot *slot)
 {
-	slot->xorBlock(data[index], data[index + 1]);
-	slot->getData(&data[index], &data[index + 1]);
+	slot->xorData(&data[index], &data[index + 1]);
+	iv[0] = data[index];
+	iv[1] = data[index + 1];
 	index += 2;
 }
 

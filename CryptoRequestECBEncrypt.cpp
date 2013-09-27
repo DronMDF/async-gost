@@ -20,14 +20,17 @@ CryptoRequestECBEncrypt::CryptoRequestECBEncrypt(const vector<uint8_t> &source,
 void CryptoRequestECBEncrypt::init(CryptoEngineSlot *slot) const
 {
 	slot->setKey(&key[0]);
-	slot->setBlock(data[0], data[1]);
 }
 
-void CryptoRequestECBEncrypt::update(CryptoEngineSlot *slot)
+void CryptoRequestECBEncrypt::load(CryptoEngineSlot *slot) const
+{
+	slot->setBlock(data[index], data[index + 1]);
+}
+
+void CryptoRequestECBEncrypt::save(CryptoEngineSlot *slot)
 {
 	slot->getData(&data[index], &data[index + 1]);
 	index += 2;
-	slot->setBlock(data[index], data[index + 1]);
 }
 
 bool CryptoRequestECBEncrypt::isDone() const

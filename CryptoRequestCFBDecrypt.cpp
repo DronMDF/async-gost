@@ -19,15 +19,18 @@ CryptoRequestCFBDecrypt::CryptoRequestCFBDecrypt(const vector<uint8_t> &source,
 void CryptoRequestCFBDecrypt::init(CryptoEngineSlot *slot) const
 {
 	slot->setKey(&key[0]);
+}
+
+void CryptoRequestCFBDecrypt::load(CryptoEngineSlot *slot) const
+{
 	slot->setBlock(iv[0], iv[1]);
 }
 
-void CryptoRequestCFBDecrypt::update(CryptoEngineSlot *slot)
+void CryptoRequestCFBDecrypt::save(CryptoEngineSlot *slot)
 {
-	const uint32_t A = data[index];
-	const uint32_t B = data[index + 1];
+	iv[0] = data[index];
+	iv[1] = data[index + 1];
 	slot->xorData(&data[index], &data[index + 1]);
-	slot->setBlock(A, B);
 	index += 2;
 }
 

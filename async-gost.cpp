@@ -95,8 +95,9 @@ void crypto_thread_encrypt()
 			request->init(&engine.slot);
 		}
 
+		request->load(&engine.slot);
 		engine.encrypt();
-		request->update(&engine.slot);
+		request->save(&engine.slot);
 
 		if (request->isDone()) {
 			request->submit();
@@ -118,8 +119,9 @@ void crypto_thread_imit()
 			request->init(&engine.slot);
 		}
 
+		request->load(&engine.slot);
 		engine.imit();
-		request->update(&engine.slot);
+		request->save(&engine.slot);
 
 		if (request->isDone()) {
 			request->submit();
@@ -152,8 +154,9 @@ future<ContextReply> async_encrypt(const shared_ptr<CryptoRequest> &request)
 			CryptoEngineGeneric engine;
 			request->init(&engine.slot);
 			while(!request->isDone()) {
+				request->load(&engine.slot);
 				engine.encrypt();
-				request->update(&engine.slot);
+				request->save(&engine.slot);
 			}
 			request->submit();
 			return request->get_future().get();
@@ -190,8 +193,9 @@ future<ContextReply> async_imit(const vector<uint8_t> &data, const vector<uint8_
 			CryptoEngineGeneric engine;
 			request->init(&engine.slot);
 			while(!request->isDone()) {
+				request->load(&engine.slot);
 				engine.imit();
-				request->update(&engine.slot);
+				request->save(&engine.slot);
 			}
 			request->submit();
 			return request->get_future().get();
