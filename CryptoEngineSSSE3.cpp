@@ -1,5 +1,5 @@
 
-#include "CryptoEngineGeneric.h"
+#include "CryptoEngineSSSE3.h"
 
 #include <cstring>
 #include <utility>
@@ -9,7 +9,7 @@
 
 using namespace std;
 
-CryptoEngineGeneric::CryptoEngineGeneric()
+CryptoEngineSSSE3::CryptoEngineSSSE3()
 	: slot(&key[0], &iv[0], &iv[1])
 {
 	const uint8_t FapsiSubst[] = {
@@ -26,7 +26,7 @@ CryptoEngineGeneric::CryptoEngineGeneric()
 	set_sbox(FapsiSubst);
 }
 
-void CryptoEngineGeneric::expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const
+void CryptoEngineSSSE3::expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const
 {
 	for (int i = 0; i < 256; i++) {
 		tab[i] = (sbox[(i / 16) * 4 + shift] & 0xf0) + (sbox[(i % 16) * 4 + shift] & 0x0f);
@@ -35,7 +35,7 @@ void CryptoEngineGeneric::expand_tab(const uint8_t sbox[64], uint32_t tab[256], 
 	}
 }
 
-void CryptoEngineGeneric::set_sbox(const uint8_t sbox[64])
+void CryptoEngineSSSE3::set_sbox(const uint8_t sbox[64])
 {
 	expand_tab(sbox, tab1, 0);
 	expand_tab(sbox, tab2, 1);
@@ -43,14 +43,14 @@ void CryptoEngineGeneric::set_sbox(const uint8_t sbox[64])
 	expand_tab(sbox, tab4, 3);
 }
 
-uint32_t CryptoEngineGeneric::step(uint32_t elem1, uint32_t elem2, uint32_t key) const
+uint32_t CryptoEngineSSSE3::step(uint32_t elem1, uint32_t elem2, uint32_t key) const
 {
 	const uint32_t tmp = key + elem2;
 	return elem1 ^ tab1[tmp & 0xff] ^ tab2[(tmp >> 8) & 0xff] ^ tab3[(tmp >> 16) & 0xff] ^
 			tab4[(tmp >> 24) & 0xff];
 }
 
-void CryptoEngineGeneric::imit()
+void CryptoEngineSSSE3::imit()
 {
 	for (int i = 0; i < 2; i++) {
 		iv[1] = step(iv[1], iv[0], key[0]);
@@ -64,7 +64,7 @@ void CryptoEngineGeneric::imit()
 	}
 }
 
-void CryptoEngineGeneric::encrypt()
+void CryptoEngineSSSE3::encrypt()
 {
 	swap(iv[0], iv[1]);
 
@@ -89,11 +89,11 @@ void CryptoEngineGeneric::encrypt()
 	iv[1] = step(iv[1], iv[0], key[0]);
 }
 
-BOOST_AUTO_TEST_SUITE(suiteCryptoEngineGeneric)
+BOOST_AUTO_TEST_SUITE(suiteCryptoEngineSSSE3)
 
 void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, uint32_t eA, uint32_t eB)
 {
-	CryptoEngineGeneric engine;
+	CryptoEngineSSSE3 engine;
 	engine.slot.setKey(&key[0]);
 	engine.slot.setBlock(A, B);
 	engine.encrypt();
@@ -105,6 +105,11 @@ void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, 
 
 BOOST_AUTO_TEST_CASE(encryptShouldBeCorrect)
 {
+	__builtin_cpu_init();
+	if (!__builtin_cpu_supports("ssse3")) {
+		return;
+	}
+
 	const vector<uint8_t> key01 = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
