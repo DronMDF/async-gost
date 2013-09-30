@@ -11,7 +11,7 @@ using namespace std;
 using namespace std::placeholders;
 
 CryptoEngineSSSE3::CryptoEngineSSSE3()
-	: slots({
+	: CryptoEngine({
 		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 0, _1), &reinterpret_cast<uint32_t *>(&A)[0], &reinterpret_cast<uint32_t *>(&B)[0]),
 		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 1, _1), &reinterpret_cast<uint32_t *>(&A)[1], &reinterpret_cast<uint32_t *>(&B)[1]),
 		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 2, _1), &reinterpret_cast<uint32_t *>(&A)[2], &reinterpret_cast<uint32_t *>(&B)[2]),
@@ -128,11 +128,11 @@ BOOST_AUTO_TEST_SUITE(suiteCryptoEngineSSSE3)
 
 void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, uint32_t eA, uint32_t eB)
 {
-	CryptoEngineSSSE3 engine;
-	for (auto slot: engine.slots) {
+	shared_ptr<CryptoEngine> engine = make_shared<CryptoEngineSSSE3>();
+	for (auto slot: engine->slots) {
 		slot.setKey(&key[0]);
 		slot.setBlock(A, B);
-		engine.encrypt();
+		engine->encrypt();
 		uint32_t rA, rB;
 		slot.getData(&rA, &rB);
 		BOOST_REQUIRE_EQUAL(rA, eA);

@@ -2,19 +2,18 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include "CryptoEngine.h"
 #include "CryptoEngineSlot.h"
 
 class CryptoRequest;
 
-class CryptoEngineSSSE3
+class CryptoEngineSSSE3 : public CryptoEngine
 {
 public:
 	CryptoEngineSSSE3();
 
-	const std::vector<CryptoEngineSlot> slots;
-
-	void imit();
-	void encrypt();
+	void imit() override;
+	void encrypt() override;
 
 private:
 	typedef unsigned v4si __attribute__ ((vector_size (16)));

@@ -17,7 +17,8 @@ SOURCES += main.cpp \
     CryptoRequestECBEncrypt.cpp \
     CryptoRequestImit.cpp \
     CryptoTest.cpp \
-    CryptoEngineSSSE3.cpp
+    CryptoEngineSSSE3.cpp \
+    CryptoEngine.cpp
 
 HEADERS += \
     CryptoRequest.h \
@@ -28,5 +29,6 @@ HEADERS += \
     CryptoRequestECBEncrypt.h \
     async-gost.h \
     CryptoRequestImit.h \
-    CryptoEngineSSSE3.h
+    CryptoEngineSSSE3.h \
+    CryptoEngine.h
 
