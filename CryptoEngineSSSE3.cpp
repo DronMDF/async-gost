@@ -10,7 +10,7 @@
 using namespace std;
 
 CryptoEngineSSSE3::CryptoEngineSSSE3()
-	: slot(&key[0], &iv[0], &iv[1])
+	: slot(&dummy[0], reinterpret_cast<uint32_t *>(&A), reinterpret_cast<uint32_t *>(&B))
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
@@ -26,67 +26,92 @@ CryptoEngineSSSE3::CryptoEngineSSSE3()
 	set_sbox(FapsiSubst);
 }
 
-void CryptoEngineSSSE3::expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const
+CryptoEngineSSSE3::v16qi CryptoEngineSSSE3::expand_tab(const uint8_t sbox[64], int li, int hi) const
 {
-	for (int i = 0; i < 256; i++) {
-		tab[i] = (sbox[(i / 16) * 4 + shift] & 0xf0) + (sbox[(i % 16) * 4 + shift] & 0x0f);
-		tab[i] <<= shift * 8;
-		tab[i] = (tab[i] << 11) | ((tab[i] >> 21) & 0x7ff);
+	union vec16 {
+		v16qi vec;
+		unsigned char arr[16];
+	} lt, ht;
+
+	for (int i = 0; i < 16; i++) {
+		lt.arr[i] = sbox[i * 4 + li] & 0x0f;
+		ht.arr[i] = sbox[i * 4 + hi] & 0xf0;
 	}
+
+	return lt.vec | ht.vec;
 }
 
 void CryptoEngineSSSE3::set_sbox(const uint8_t sbox[64])
 {
-	expand_tab(sbox, tab1, 0);
-	expand_tab(sbox, tab2, 1);
-	expand_tab(sbox, tab3, 2);
-	expand_tab(sbox, tab4, 3);
+	tab1 = expand_tab(sbox, 0, 1);
+	tab2 = expand_tab(sbox, 1, 0);
+	tab3 = expand_tab(sbox, 2, 3);
+	tab4 = expand_tab(sbox, 3, 2);
 }
 
-uint32_t CryptoEngineSSSE3::step(uint32_t elem1, uint32_t elem2, uint32_t key) const
+CryptoEngineSSSE3::v4si CryptoEngineSSSE3::step(v4si a, v4si b, v4si key) const
 {
-	const uint32_t tmp = key + elem2;
-	return elem1 ^ tab1[tmp & 0xff] ^ tab2[(tmp >> 8) & 0xff] ^ tab3[(tmp >> 16) & 0xff] ^
-			tab4[(tmp >> 24) & 0xff];
+	static const v4si lo_mask = { 0x000f000f, 0x000f000f, 0x000f000f, 0x000f000f };
+	static const v4si hi_mask = { 0x0f000f00, 0x0f000f00, 0x0f000f00, 0x0f000f00 };
+
+	static const v16qi b0_mask = { 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00,
+					0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00 };
+	static const v16qi b1_mask = { 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00,
+					0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00 };
+	static const v16qi b2_mask = { 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0,
+					0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0 };
+	static const v16qi b3_mask = { 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f,
+					0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f };
+
+	const v4si lo = key + a;
+	const v4si hi = __builtin_ia32_psrldi128(lo, 4);
+	const v4si loc = (lo & lo_mask) | (hi & hi_mask);
+	const v4si hic = (lo & hi_mask) | (hi & lo_mask);
+	const v16qi b0 = __builtin_ia32_pshufb128(tab1, loc) & b0_mask; // 0x????1??0
+	const v16qi b1 = __builtin_ia32_pshufb128(tab2, hic) & b1_mask; // 0x?????10?
+	const v16qi b2 = __builtin_ia32_pshufb128(tab3, loc) & b2_mask; // 0x3??2????
+	const v16qi b3 = __builtin_ia32_pshufb128(tab4, hic) & b3_mask; // 0x?32?????
+	const v4si i1 = b0 | b1 | b2 | b3;
+	return b ^ (__builtin_ia32_pslldi128(i1, 11) | __builtin_ia32_psrldi128(i1, 21));
 }
 
 void CryptoEngineSSSE3::imit()
 {
 	for (int i = 0; i < 2; i++) {
-		iv[1] = step(iv[1], iv[0], key[0]);
-		iv[0] = step(iv[0], iv[1], key[1]);
-		iv[1] = step(iv[1], iv[0], key[2]);
-		iv[0] = step(iv[0], iv[1], key[3]);
-		iv[1] = step(iv[1], iv[0], key[4]);
-		iv[0] = step(iv[0], iv[1], key[5]);
-		iv[1] = step(iv[1], iv[0], key[6]);
-		iv[0] = step(iv[0], iv[1], key[7]);
+		B = step(B, A, key[0]);
+		A = step(A, B, key[1]);
+		B = step(B, A, key[2]);
+		A = step(A, B, key[3]);
+		B = step(B, A, key[4]);
+		A = step(A, B, key[5]);
+		B = step(B, A, key[6]);
+		A = step(A, B, key[7]);
 	}
 }
 
 void CryptoEngineSSSE3::encrypt()
 {
-	swap(iv[0], iv[1]);
+	swap(A, B);
 
 	for (int i = 0; i < 3; i++) {
-		iv[0] = step(iv[0], iv[1], key[0]);
-		iv[1] = step(iv[1], iv[0], key[1]);
-		iv[0] = step(iv[0], iv[1], key[2]);
-		iv[1] = step(iv[1], iv[0], key[3]);
-		iv[0] = step(iv[0], iv[1], key[4]);
-		iv[1] = step(iv[1], iv[0], key[5]);
-		iv[0] = step(iv[0], iv[1], key[6]);
-		iv[1] = step(iv[1], iv[0], key[7]);
+		A = step(A, B, key[0]);
+		B = step(B, A, key[1]);
+		A = step(A, B, key[2]);
+		B = step(B, A, key[3]);
+		A = step(A, B, key[4]);
+		B = step(B, A, key[5]);
+		A = step(A, B, key[6]);
+		B = step(B, A, key[7]);
 	}
 
-	iv[0] = step(iv[0], iv[1], key[7]);
-	iv[1] = step(iv[1], iv[0], key[6]);
-	iv[0] = step(iv[0], iv[1], key[5]);
-	iv[1] = step(iv[1], iv[0], key[4]);
-	iv[0] = step(iv[0], iv[1], key[3]);
-	iv[1] = step(iv[1], iv[0], key[2]);
-	iv[0] = step(iv[0], iv[1], key[1]);
-	iv[1] = step(iv[1], iv[0], key[0]);
+	A = step(A, B, key[7]);
+	B = step(B, A, key[6]);
+	A = step(A, B, key[5]);
+	B = step(B, A, key[4]);
+	A = step(A, B, key[3]);
+	B = step(B, A, key[2]);
+	A = step(A, B, key[1]);
+	B = step(B, A, key[0]);
 }
 
 BOOST_AUTO_TEST_SUITE(suiteCryptoEngineSSSE3)
