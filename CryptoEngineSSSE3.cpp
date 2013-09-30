@@ -8,9 +8,10 @@
 #include "CryptoRequest.h"
 
 using namespace std;
+using namespace std::placeholders;
 
 CryptoEngineSSSE3::CryptoEngineSSSE3()
-	: slot(&dummy[0], reinterpret_cast<uint32_t *>(&A), reinterpret_cast<uint32_t *>(&B))
+	: slot(bind(memcpy, &dummy[0], _1, sizeof(dummy)), reinterpret_cast<uint32_t *>(&A), reinterpret_cast<uint32_t *>(&B))
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,

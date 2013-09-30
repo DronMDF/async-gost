@@ -8,9 +8,10 @@
 #include "CryptoRequest.h"
 
 using namespace std;
+using namespace std::placeholders;
 
 CryptoEngineGeneric::CryptoEngineGeneric()
-	: slot(&key[0], &A, &B)
+	: slot(bind(memcpy, &key[0], _1, sizeof(key)), &A, &B)
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,

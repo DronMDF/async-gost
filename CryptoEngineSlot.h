@@ -1,11 +1,12 @@
 
 #pragma once
 #include <cstdint>
+#include <functional>
 
 class CryptoEngineSlot
 {
 public:
-	CryptoEngineSlot(uint32_t *key, uint32_t *A, uint32_t *B);
+	CryptoEngineSlot(std::function<void(const void *key)> setkey, uint32_t *A, uint32_t *B);
 
 	void setKey(const void *key);
 	void setBlock(uint32_t A, uint32_t B);
@@ -15,7 +16,7 @@ public:
 	void getData(uint32_t * const A, uint32_t * const B) const;
 
 private:
-	uint32_t * const key;
+	std::function<void(const void *key)> setkey;
 	uint32_t * const A;
 	uint32_t * const B;
 };

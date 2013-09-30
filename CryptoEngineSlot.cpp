@@ -1,15 +1,17 @@
 #include "CryptoEngineSlot.h"
 #include <cstring>
 
-CryptoEngineSlot::CryptoEngineSlot(uint32_t *key, uint32_t *A, uint32_t *B)
-	: key(key), A(A), B(B)
+using namespace std;
+
+CryptoEngineSlot::CryptoEngineSlot(function<void(const void *key)> setkey, uint32_t *A, uint32_t *B)
+	: setkey(setkey), A(A), B(B)
 {
 
 }
 
 void CryptoEngineSlot::setKey(const void *key)
 {
-	memcpy(this->key, key, 32);
+	setkey(key);
 }
 
 void CryptoEngineSlot::setBlock(uint32_t A, uint32_t B)
