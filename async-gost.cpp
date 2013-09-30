@@ -18,20 +18,26 @@ static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_encrypt_t
 void crypto_thread_encrypt()
 {
 	CryptoEngineGeneric engine;
-	shared_ptr<CryptoRequest> request;
+	vector<shared_ptr<CryptoRequest>> request(engine.slots.size());
 	while(true) {
-		if (!request) {
-			crypto_encrypt_tasks.pop(request);
-			request->init(&engine.slot);
+		for (size_t s = 0; s < engine.slots.size(); s++) {
+			if (!request[s]) {
+				crypto_encrypt_tasks.pop(request[s]);
+				request[s]->init(&engine.slots[s]);
+			}
+
+			request[s]->load(&engine.slots[s]);
 		}
 
-		request->load(&engine.slot);
 		engine.encrypt();
-		request->save(&engine.slot);
 
-		if (request->isDone()) {
-			request->submit();
-			request.reset();
+		for (size_t s = 0; s < engine.slots.size(); s++) {
+			request[s]->save(&engine.slots[s]);
+
+			if (request[s]->isDone()) {
+				request[s]->submit();
+				request[s].reset();
+			}
 		}
 	}
 }
@@ -42,20 +48,26 @@ static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_imit_task
 void crypto_thread_imit()
 {
 	CryptoEngineGeneric engine;
-	shared_ptr<CryptoRequest> request;
+	vector<shared_ptr<CryptoRequest>> request(engine.slots.size());
 	while(true) {
-		if (!request) {
-			crypto_imit_tasks.pop(request);
-			request->init(&engine.slot);
+		for (size_t s = 0; s < engine.slots.size(); s++) {
+			if (!request[s]) {
+				crypto_imit_tasks.pop(request[s]);
+				request[s]->init(&engine.slots[s]);
+			}
+
+			request[s]->load(&engine.slots[s]);
 		}
 
-		request->load(&engine.slot);
 		engine.imit();
-		request->save(&engine.slot);
 
-		if (request->isDone()) {
-			request->submit();
-			request.reset();
+		for (size_t s = 0; s < engine.slots.size(); s++) {
+			request[s]->save(&engine.slots[s]);
+
+			if (request[s]->isDone()) {
+				request[s]->submit();
+				request[s].reset();
+			}
 		}
 	}
 }
@@ -88,11 +100,11 @@ future<ContextReply> async_encrypt(const shared_ptr<CryptoRequest> &request)
 		// Режим без выделенных потоков
 		return async([request]{
 			CryptoEngineGeneric engine;
-			request->init(&engine.slot);
+			request->init(&engine.slots[0]);
 			while(!request->isDone()) {
-				request->load(&engine.slot);
+				request->load(&engine.slots[0]);
 				engine.encrypt();
-				request->save(&engine.slot);
+				request->save(&engine.slots[0]);
 			}
 			request->submit();
 			return request->get_future().get();
@@ -127,11 +139,11 @@ future<ContextReply> async_imit(const vector<uint8_t> &data, const vector<uint8_
 	if (crypto_imit_threads.empty()) {
 		return async([request]{
 			CryptoEngineGeneric engine;
-			request->init(&engine.slot);
+			request->init(&engine.slots[0]);
 			while(!request->isDone()) {
-				request->load(&engine.slot);
+				request->load(&engine.slots[0]);
 				engine.imit();
-				request->save(&engine.slot);
+				request->save(&engine.slots[0]);
 			}
 			request->submit();
 			return request->get_future().get();

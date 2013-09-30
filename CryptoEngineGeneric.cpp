@@ -11,7 +11,7 @@ using namespace std;
 using namespace std::placeholders;
 
 CryptoEngineGeneric::CryptoEngineGeneric()
-	: slot(bind(memcpy, &key[0], _1, sizeof(key)), &A, &B)
+	: slots({ CryptoEngineSlot(bind(memcpy, &key[0], _1, sizeof(key)), &A, &B) })
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
@@ -95,11 +95,11 @@ BOOST_AUTO_TEST_SUITE(suiteCryptoEngineGeneric)
 void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, uint32_t eA, uint32_t eB)
 {
 	CryptoEngineGeneric engine;
-	engine.slot.setKey(&key[0]);
-	engine.slot.setBlock(A, B);
+	engine.slots[0].setKey(&key[0]);
+	engine.slots[0].setBlock(A, B);
 	engine.encrypt();
 	uint32_t rA, rB;
-	engine.slot.getData(&rA, &rB);
+	engine.slots[0].getData(&rA, &rB);
 	BOOST_REQUIRE_EQUAL(rA, eA);
 	BOOST_REQUIRE_EQUAL(rB, eB);
 }
