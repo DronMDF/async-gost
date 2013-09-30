@@ -18,7 +18,8 @@ SOURCES += main.cpp \
     CryptoRequestImit.cpp \
     CryptoTest.cpp \
     CryptoEngineSSSE3.cpp \
-    CryptoEngine.cpp
+    CryptoEngine.cpp \
+    CryptoRequestNull.cpp
 
 HEADERS += \
     CryptoRequest.h \
@@ -30,5 +31,6 @@ HEADERS += \
     async-gost.h \
     CryptoRequestImit.h \
     CryptoEngineSSSE3.h \
-    CryptoEngine.h
+    CryptoEngine.h \
+    CryptoRequestNull.h
 

@@ -11,7 +11,7 @@ using namespace std;
 using namespace std::placeholders;
 
 CryptoEngineGeneric::CryptoEngineGeneric()
-	: slots({ CryptoEngineSlot(bind(memcpy, &key[0], _1, sizeof(key)), &A, &B) })
+	: CryptoEngine({ CryptoEngineSlot(bind(memcpy, &key[0], _1, sizeof(key)), &A, &B) })
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,

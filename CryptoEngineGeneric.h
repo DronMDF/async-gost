@@ -1,17 +1,14 @@
 #pragma once
 #include <cstdint>
-#include <memory>
-#include <vector>
+#include "CryptoEngine.h"
 #include "CryptoEngineSlot.h"
 
 class CryptoRequest;
 
-class CryptoEngineGeneric
+class CryptoEngineGeneric : public CryptoEngine
 {
 public:
 	CryptoEngineGeneric();
-
-	const std::vector<CryptoEngineSlot> slots;
 
 	void imit();
 	void encrypt();

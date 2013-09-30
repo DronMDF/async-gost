@@ -1,14 +1,15 @@
 
 #include "async-gost.h"
 #include <cstring>
-#include <boost/test/unit_test.hpp>
 #include <tbb/concurrent_queue.h>
 #include "CryptoEngineGeneric.h"
+#include "CryptoEngineSSSE3.h"
 #include "CryptoRequest.h"
 #include "CryptoRequestCFBDecrypt.h"
 #include "CryptoRequestCFBEncrypt.h"
 #include "CryptoRequestECBEncrypt.h"
 #include "CryptoRequestImit.h"
+#include "CryptoRequestNull.h"
 
 using namespace std;
 
@@ -17,22 +18,42 @@ static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_encrypt_t
 
 void crypto_thread_encrypt()
 {
-	CryptoEngineGeneric engine;
-	vector<shared_ptr<CryptoRequest>> request(engine.slots.size());
+	shared_ptr<CryptoEngine> engine = make_shared<CryptoEngineGeneric>();
+
+	// Шифратор должен доводить дело до конца
+	__builtin_cpu_init();
+	if (__builtin_cpu_supports("ssse3")) {
+		// WTF: В зависимости от опций компиляции этот шифратор может использовать avx
+		engine = make_shared<CryptoEngineSSSE3>();
+	}
+
+	vector<shared_ptr<CryptoRequest>> request(engine->slots.size());
 	while(true) {
-		for (size_t s = 0; s < engine.slots.size(); s++) {
+		int active_slots = engine->slots.size();
+		for (size_t s = 0; s < engine->slots.size(); s++) {
 			if (!request[s]) {
-				crypto_encrypt_tasks.pop(request[s]);
-				request[s]->init(&engine.slots[s]);
+				if (crypto_encrypt_tasks.try_pop(request[s])) {;
+					request[s]->init(&engine->slots[s]);
+				} else {
+					request[s] = make_shared<CryptoRequestNull>();
+					active_slots--;
+				}
 			}
 
-			request[s]->load(&engine.slots[s]);
+			request[s]->load(&engine->slots[s]);
 		}
 
-		engine.encrypt();
+		if (active_slots == 0) {
+			// Заданий нет - ждем до первого задания
+			crypto_encrypt_tasks.pop(request[0]);
+			request[0]->init(&engine->slots[0]);
+			request[0]->load(&engine->slots[0]);
+		}
 
-		for (size_t s = 0; s < engine.slots.size(); s++) {
-			request[s]->save(&engine.slots[s]);
+		engine->encrypt();
+
+		for (size_t s = 0; s < engine->slots.size(); s++) {
+			request[s]->save(&engine->slots[s]);
 
 			if (request[s]->isDone()) {
 				request[s]->submit();

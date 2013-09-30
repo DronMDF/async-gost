@@ -1,7 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <memory>
-#include <vector>
 #include "CryptoEngine.h"
 #include "CryptoEngineSlot.h"
 
