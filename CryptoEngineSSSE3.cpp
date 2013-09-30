@@ -11,7 +11,12 @@ using namespace std;
 using namespace std::placeholders;
 
 CryptoEngineSSSE3::CryptoEngineSSSE3()
-	: slot(bind(&CryptoEngineSSSE3::set_key, this, 0, _1), reinterpret_cast<uint32_t *>(&A), reinterpret_cast<uint32_t *>(&B))
+	: slots({
+		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 0, _1), &reinterpret_cast<uint32_t *>(&A)[0], &reinterpret_cast<uint32_t *>(&B)[0]),
+		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 1, _1), &reinterpret_cast<uint32_t *>(&A)[1], &reinterpret_cast<uint32_t *>(&B)[1]),
+		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 2, _1), &reinterpret_cast<uint32_t *>(&A)[2], &reinterpret_cast<uint32_t *>(&B)[2]),
+		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 3, _1), &reinterpret_cast<uint32_t *>(&A)[3], &reinterpret_cast<uint32_t *>(&B)[3]),
+	})
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
@@ -124,13 +129,15 @@ BOOST_AUTO_TEST_SUITE(suiteCryptoEngineSSSE3)
 void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, uint32_t eA, uint32_t eB)
 {
 	CryptoEngineSSSE3 engine;
-	engine.slot.setKey(&key[0]);
-	engine.slot.setBlock(A, B);
-	engine.encrypt();
-	uint32_t rA, rB;
-	engine.slot.getData(&rA, &rB);
-	BOOST_REQUIRE_EQUAL(rA, eA);
-	BOOST_REQUIRE_EQUAL(rB, eB);
+	for (auto slot: engine.slots) {
+		slot.setKey(&key[0]);
+		slot.setBlock(A, B);
+		engine.encrypt();
+		uint32_t rA, rB;
+		slot.getData(&rA, &rB);
+		BOOST_REQUIRE_EQUAL(rA, eA);
+		BOOST_REQUIRE_EQUAL(rB, eB);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(encryptShouldBeCorrect)

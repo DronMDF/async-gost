@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <vector>
 #include "CryptoEngineSlot.h"
 
 class CryptoRequest;
@@ -10,7 +11,7 @@ class CryptoEngineSSSE3
 public:
 	CryptoEngineSSSE3();
 
-	CryptoEngineSlot slot;
+	const std::vector<CryptoEngineSlot> slots;
 
 	void imit();
 	void encrypt();
