@@ -11,7 +11,7 @@ using namespace std;
 using namespace std::placeholders;
 
 CryptoEngineSSSE3::CryptoEngineSSSE3()
-	: slot(bind(memcpy, &dummy[0], _1, sizeof(dummy)), reinterpret_cast<uint32_t *>(&A), reinterpret_cast<uint32_t *>(&B))
+	: slot(bind(&CryptoEngineSSSE3::set_key, this, 0, _1), reinterpret_cast<uint32_t *>(&A), reinterpret_cast<uint32_t *>(&B))
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
@@ -29,17 +29,12 @@ CryptoEngineSSSE3::CryptoEngineSSSE3()
 
 CryptoEngineSSSE3::v16qi CryptoEngineSSSE3::expand_tab(const uint8_t sbox[64], int li, int hi) const
 {
-	union vec16 {
-		v16qi vec;
-		unsigned char arr[16];
-	} lt, ht;
-
+	v16qi tab;
 	for (int i = 0; i < 16; i++) {
-		lt.arr[i] = sbox[i * 4 + li] & 0x0f;
-		ht.arr[i] = sbox[i * 4 + hi] & 0xf0;
+		reinterpret_cast<uint8_t *>(&tab)[i] =
+			(sbox[i * 4 + li] & 0x0f) | (sbox[i * 4 + hi] & 0xf0);
 	}
-
-	return lt.vec | ht.vec;
+	return tab;
 }
 
 void CryptoEngineSSSE3::set_sbox(const uint8_t sbox[64])
@@ -48,6 +43,15 @@ void CryptoEngineSSSE3::set_sbox(const uint8_t sbox[64])
 	tab2 = expand_tab(sbox, 1, 0);
 	tab3 = expand_tab(sbox, 2, 3);
 	tab4 = expand_tab(sbox, 3, 2);
+}
+
+void CryptoEngineSSSE3::set_key(int slot, const void *source_key)
+{
+	assert(slot < 4);
+	for (int i = 0; i < 8; i++) {
+		reinterpret_cast<uint32_t *>(&key[i])[slot] =
+			reinterpret_cast<const uint32_t *>(source_key)[i];
+	}
 }
 
 CryptoEngineSSSE3::v4si CryptoEngineSSSE3::step(v4si a, v4si b, v4si key) const
@@ -64,7 +68,7 @@ CryptoEngineSSSE3::v4si CryptoEngineSSSE3::step(v4si a, v4si b, v4si key) const
 	static const v16qi b3_mask = { 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f,
 					0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f };
 
-	const v4si lo = key + a;
+	const v4si lo = key + b;
 	const v4si hi = __builtin_ia32_psrldi128(lo, 4);
 	const v4si loc = (lo & lo_mask) | (hi & hi_mask);
 	const v4si hic = (lo & hi_mask) | (hi & lo_mask);
@@ -73,7 +77,7 @@ CryptoEngineSSSE3::v4si CryptoEngineSSSE3::step(v4si a, v4si b, v4si key) const
 	const v16qi b2 = __builtin_ia32_pshufb128(tab3, loc) & b2_mask; // 0x3??2????
 	const v16qi b3 = __builtin_ia32_pshufb128(tab4, hic) & b3_mask; // 0x?32?????
 	const v4si i1 = b0 | b1 | b2 | b3;
-	return b ^ (__builtin_ia32_pslldi128(i1, 11) | __builtin_ia32_psrldi128(i1, 21));
+	return a ^ (__builtin_ia32_pslldi128(i1, 11) | __builtin_ia32_psrldi128(i1, 21));
 }
 
 void CryptoEngineSSSE3::imit()

@@ -44,10 +44,10 @@ void CryptoEngineGeneric::set_sbox(const uint8_t sbox[64])
 	expand_tab(sbox, tab4, 3);
 }
 
-uint32_t CryptoEngineGeneric::step(uint32_t elem1, uint32_t elem2, uint32_t key) const
+uint32_t CryptoEngineGeneric::step(uint32_t a, uint32_t b, uint32_t key) const
 {
-	const uint32_t tmp = key + elem2;
-	return elem1 ^ tab1[tmp & 0xff] ^ tab2[(tmp >> 8) & 0xff] ^ tab3[(tmp >> 16) & 0xff] ^
+	const uint32_t tmp = key + b;
+	return a ^ tab1[tmp & 0xff] ^ tab2[(tmp >> 8) & 0xff] ^ tab3[(tmp >> 16) & 0xff] ^
 			tab4[(tmp >> 24) & 0xff];
 }
 

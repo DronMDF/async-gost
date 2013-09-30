@@ -2,8 +2,8 @@ TEMPLATE = app
 CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
-QMAKE_CXXFLAGS += -std=c++11
-QMAKE_CXXFLAGS_RELEASE += -march=native -mssse3 -flax-vector-conversions -fomit-frame-pointer
+QMAKE_CXXFLAGS += -std=c++11 -mssse3 -flax-vector-conversions
+QMAKE_CXXFLAGS_RELEASE += -march=native -fomit-frame-pointer
 # -mno-avx Позволяет отключить оптимизацию для avx процессоров, а то код получается разный
 LIBS += -lboost_unit_test_framework -ltbb
 
