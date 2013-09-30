@@ -10,7 +10,7 @@
 using namespace std;
 
 CryptoEngineGeneric::CryptoEngineGeneric()
-	: slot(&key[0], &iv[0], &iv[1])
+	: slot(&key[0], &A, &B)
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
@@ -53,40 +53,40 @@ uint32_t CryptoEngineGeneric::step(uint32_t elem1, uint32_t elem2, uint32_t key)
 void CryptoEngineGeneric::imit()
 {
 	for (int i = 0; i < 2; i++) {
-		iv[1] = step(iv[1], iv[0], key[0]);
-		iv[0] = step(iv[0], iv[1], key[1]);
-		iv[1] = step(iv[1], iv[0], key[2]);
-		iv[0] = step(iv[0], iv[1], key[3]);
-		iv[1] = step(iv[1], iv[0], key[4]);
-		iv[0] = step(iv[0], iv[1], key[5]);
-		iv[1] = step(iv[1], iv[0], key[6]);
-		iv[0] = step(iv[0], iv[1], key[7]);
+		B = step(B, A, key[0]);
+		A = step(A, B, key[1]);
+		B = step(B, A, key[2]);
+		A = step(A, B, key[3]);
+		B = step(B, A, key[4]);
+		A = step(A, B, key[5]);
+		B = step(B, A, key[6]);
+		A = step(A, B, key[7]);
 	}
 }
 
 void CryptoEngineGeneric::encrypt()
 {
-	swap(iv[0], iv[1]);
+	swap(A, B);
 
 	for (int i = 0; i < 3; i++) {
-		iv[0] = step(iv[0], iv[1], key[0]);
-		iv[1] = step(iv[1], iv[0], key[1]);
-		iv[0] = step(iv[0], iv[1], key[2]);
-		iv[1] = step(iv[1], iv[0], key[3]);
-		iv[0] = step(iv[0], iv[1], key[4]);
-		iv[1] = step(iv[1], iv[0], key[5]);
-		iv[0] = step(iv[0], iv[1], key[6]);
-		iv[1] = step(iv[1], iv[0], key[7]);
+		A = step(A, B, key[0]);
+		B = step(B, A, key[1]);
+		A = step(A, B, key[2]);
+		B = step(B, A, key[3]);
+		A = step(A, B, key[4]);
+		B = step(B, A, key[5]);
+		A = step(A, B, key[6]);
+		B = step(B, A, key[7]);
 	}
 
-	iv[0] = step(iv[0], iv[1], key[7]);
-	iv[1] = step(iv[1], iv[0], key[6]);
-	iv[0] = step(iv[0], iv[1], key[5]);
-	iv[1] = step(iv[1], iv[0], key[4]);
-	iv[0] = step(iv[0], iv[1], key[3]);
-	iv[1] = step(iv[1], iv[0], key[2]);
-	iv[0] = step(iv[0], iv[1], key[1]);
-	iv[1] = step(iv[1], iv[0], key[0]);
+	A = step(A, B, key[7]);
+	B = step(B, A, key[6]);
+	A = step(A, B, key[5]);
+	B = step(B, A, key[4]);
+	A = step(A, B, key[3]);
+	B = step(B, A, key[2]);
+	A = step(A, B, key[1]);
+	B = step(B, A, key[0]);
 }
 
 BOOST_AUTO_TEST_SUITE(suiteCryptoEngineGeneric)
