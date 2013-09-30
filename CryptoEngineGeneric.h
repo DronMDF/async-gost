@@ -10,7 +10,7 @@ class CryptoEngineGeneric
 public:
 	CryptoEngineGeneric();
 
-	CryptoEngineSlot slot;
+	const CryptoEngineSlot slot;
 
 	void imit();
 	void encrypt();

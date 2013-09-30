@@ -9,18 +9,18 @@ CryptoEngineSlot::CryptoEngineSlot(function<void(const void *key)> setkey, uint3
 
 }
 
-void CryptoEngineSlot::setKey(const void *key)
+void CryptoEngineSlot::setKey(const void *key) const
 {
 	setkey(key);
 }
 
-void CryptoEngineSlot::setBlock(uint32_t A, uint32_t B)
+void CryptoEngineSlot::setBlock(uint32_t A, uint32_t B) const
 {
 	*this->A = A;
 	*this->B = B;
 }
 
-void CryptoEngineSlot::xorBlock(uint32_t A, uint32_t B)
+void CryptoEngineSlot::xorBlock(uint32_t A, uint32_t B) const
 {
 	*this->A ^= A;
 	*this->B ^= B;

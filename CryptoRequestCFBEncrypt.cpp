@@ -15,17 +15,17 @@ CryptoRequestCFBEncrypt::CryptoRequestCFBEncrypt(const vector<uint8_t> &source,
 	data.assign(data_ptr, data_ptr + ((size + 7) & ~7) / sizeof(uint32_t));
 }
 
-void CryptoRequestCFBEncrypt::init(CryptoEngineSlot *slot) const
+void CryptoRequestCFBEncrypt::init(const CryptoEngineSlot *slot) const
 {
 	slot->setKey(&key[0]);
 }
 
-void CryptoRequestCFBEncrypt::load(CryptoEngineSlot *slot) const
+void CryptoRequestCFBEncrypt::load(const CryptoEngineSlot *slot) const
 {
 	slot->setBlock(iv[0], iv[1]);
 }
 
-void CryptoRequestCFBEncrypt::save(CryptoEngineSlot *slot)
+void CryptoRequestCFBEncrypt::save(const CryptoEngineSlot *slot)
 {
 	slot->xorData(&data[index], &data[index + 1]);
 	iv[0] = data[index];

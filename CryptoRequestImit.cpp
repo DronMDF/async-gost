@@ -20,18 +20,18 @@ CryptoRequestImit::CryptoRequestImit(const vector<uint8_t> &source, const vector
 	memcpy(&data[0], &source[0], size);
 }
 
-void CryptoRequestImit::init(CryptoEngineSlot *slot) const
+void CryptoRequestImit::init(const CryptoEngineSlot *slot) const
 {
 	slot->setKey(&key[0]);
 	slot->setBlock(0, 0);
 }
 
-void CryptoRequestImit::load(CryptoEngineSlot *slot) const
+void CryptoRequestImit::load(const CryptoEngineSlot *slot) const
 {
 	slot->xorBlock(data[index], data[index + 1]);
 }
 
-void CryptoRequestImit::save(CryptoEngineSlot *slot)
+void CryptoRequestImit::save(const CryptoEngineSlot *slot)
 {
 	index += 2;
 	if (index == data.size()) {
