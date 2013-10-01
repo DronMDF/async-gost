@@ -1,4 +1,4 @@
-
+#include "compiler.h"
 #include "CryptoEngineSSSE3.h"
 
 #include <cstring>
