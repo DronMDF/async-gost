@@ -6,10 +6,9 @@ class CryptoEngineSlot;
 
 class CryptoEngine {
 public:
-	CryptoEngine(const std::vector<CryptoEngineSlot> &slots);
+	virtual unsigned getSlotCount() const = 0;
+	virtual const CryptoEngineSlot *getSlot(unsigned slot) const = 0;
 
 	virtual void imit() = 0;
 	virtual void encrypt() = 0;
-
-	const std::vector<CryptoEngineSlot> slots;
 };

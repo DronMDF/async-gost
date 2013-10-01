@@ -10,8 +10,11 @@ class CryptoEngineGeneric : public CryptoEngine
 public:
 	CryptoEngineGeneric();
 
-	void imit();
-	void encrypt();
+	unsigned getSlotCount() const override;
+	const CryptoEngineSlot *getSlot(unsigned slot) const override;
+
+	void imit() override;
+	void encrypt() override;
 
 private:
 	void expand_tab(const uint8_t sbox[64], uint32_t tab[256], int shift) const;
@@ -26,4 +29,6 @@ private:
 	uint32_t tab2[256];
 	uint32_t tab3[256];
 	uint32_t tab4[256];
+
+	CryptoEngineSlot slot;
 };

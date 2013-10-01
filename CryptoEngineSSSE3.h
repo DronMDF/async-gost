@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include "CryptoEngine.h"
 #include "CryptoEngineSlot.h"
@@ -9,6 +10,9 @@ class CryptoEngineSSSE3 : public CryptoEngine
 {
 public:
 	CryptoEngineSSSE3();
+
+	unsigned getSlotCount() const override;
+	const CryptoEngineSlot *getSlot(unsigned slot) const override;
 
 	void imit() override;
 	void encrypt() override;
@@ -30,4 +34,6 @@ private:
 	v16qi tab2;
 	v16qi tab3;
 	v16qi tab4;
+
+	std::array<CryptoEngineSlot, 4> slots;
 };

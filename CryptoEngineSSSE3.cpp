@@ -12,7 +12,7 @@ using namespace std;
 using namespace std::placeholders;
 
 CryptoEngineSSSE3::CryptoEngineSSSE3()
-	: CryptoEngine({
+	: slots({
 		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 0, _1), &reinterpret_cast<uint32_t *>(&A)[0], &reinterpret_cast<uint32_t *>(&B)[0]),
 		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 1, _1), &reinterpret_cast<uint32_t *>(&A)[1], &reinterpret_cast<uint32_t *>(&B)[1]),
 		CryptoEngineSlot(bind(&CryptoEngineSSSE3::set_key, this, 2, _1), &reinterpret_cast<uint32_t *>(&A)[2], &reinterpret_cast<uint32_t *>(&B)[2]),
@@ -125,17 +125,28 @@ void CryptoEngineSSSE3::encrypt()
 	B = step(B, A, key[0]);
 }
 
+unsigned CryptoEngineSSSE3::getSlotCount() const
+{
+	return slots.size();
+}
+
+const CryptoEngineSlot *CryptoEngineSSSE3::getSlot(unsigned slot) const
+{
+	assert(slot < 4);
+	return &slots[slot];
+}
+
 BOOST_AUTO_TEST_SUITE(suiteCryptoEngineSSSE3)
 
 void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, uint32_t eA, uint32_t eB)
 {
 	shared_ptr<CryptoEngine> engine = make_shared<CryptoEngineSSSE3>();
-	for (auto slot: engine->slots) {
-		slot.setKey(&key[0]);
-		slot.setBlock(A, B);
+	for (unsigned s = 0; s < engine->getSlotCount(); s++) {
+		engine->getSlot(s)->setKey(&key[0]);
+		engine->getSlot(s)->setBlock(A, B);
 		engine->encrypt();
 		uint32_t rA, rB;
-		slot.getData(&rA, &rB);
+		engine->getSlot(s)->getData(&rA, &rB);
 		BOOST_REQUIRE_EQUAL(rA, eA);
 		BOOST_REQUIRE_EQUAL(rB, eB);
 	}

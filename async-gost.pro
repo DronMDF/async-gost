@@ -18,7 +18,6 @@ SOURCES += main.cpp \
     CryptoRequestImit.cpp \
     CryptoTest.cpp \
     CryptoEngineSSSE3.cpp \
-    CryptoEngine.cpp \
     CryptoRequestNull.cpp \
     CpuSupport.cpp
 

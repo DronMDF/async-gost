@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 	cout << "Тестирование без потоков прошло успешно;" << endl;
 
 	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
-	//add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
+	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
 	//add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
 	//add_crypto_thread(CRYPTO_ENGINE_IMIT_GENERIC);
 
@@ -201,13 +201,13 @@ int main(int argc, char **argv)
 //	auto rate1 = rr1.get() + rr2.get() + rr3.get();
 //	cout << "loaded: " << rate1 / 1000 << " Kbit/sec" << endl;
 
-	futures.set_capacity(100);
-	//thread infinity(infinity_loader, interval);
-	thread fixed(fixed_loader, interval);
+	futures.set_capacity(1000);
+	thread infinity(infinity_loader, interval);
+	//thread fixed(fixed_loader, interval);
 	auto rr = async(infinity_retriver, 1);
 	auto rate = rr.get();
-	fixed.join();
-	//infinity.join();
+	//fixed.join();
+	infinity.join();
 	cout << "loaded: " << rate / 1000 << " Kbit/sec" << endl;
 
 	return 0;
