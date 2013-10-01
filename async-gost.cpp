@@ -1,3 +1,4 @@
+#include "compiler.h"
 
 #include "async-gost.h"
 #include <cstring>
