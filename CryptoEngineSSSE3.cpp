@@ -74,7 +74,7 @@ CryptoEngineSSSE3::v4si CryptoEngineSSSE3::step(v4si a, v4si b, v4si key) const
 					0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f };
 
 	const v4si lo = key + b;
-	const v4si hi = __builtin_ia32_psrldi128(lo, 4);
+	const v4si hi = lo >> 4;
 	const v4si loc = (lo & lo_mask) | (hi & hi_mask);
 	const v4si hic = (lo & hi_mask) | (hi & lo_mask);
 	const v16qi b0 = __builtin_ia32_pshufb128(tab1, loc) & b0_mask; // 0x????1??0
@@ -82,7 +82,7 @@ CryptoEngineSSSE3::v4si CryptoEngineSSSE3::step(v4si a, v4si b, v4si key) const
 	const v16qi b2 = __builtin_ia32_pshufb128(tab3, loc) & b2_mask; // 0x3??2????
 	const v16qi b3 = __builtin_ia32_pshufb128(tab4, hic) & b3_mask; // 0x?32?????
 	const v4si i1 = b0 | b1 | b2 | b3;
-	return a ^ (__builtin_ia32_pslldi128(i1, 11) | __builtin_ia32_psrldi128(i1, 21));
+	return a ^ ((i1 << 11) | (i1 >> 21));
 }
 
 void CryptoEngineSSSE3::imit()

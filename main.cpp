@@ -62,6 +62,31 @@ void infinity_loader(const seconds &interval)
 	futures.push(context);
 }
 
+void fixed_loader(const seconds &interval)
+{
+	vector<uint8_t> source(1000 * 8);
+	vector<uint8_t> key(32);
+
+	default_random_engine generator(system_clock::now().time_since_epoch().count());
+	generate(source.begin(), source.end(), generator);
+	generate(key.begin(), key.end(), generator);
+
+	const high_resolution_clock::time_point finish = high_resolution_clock::now() + interval;
+	while (high_resolution_clock::now() < finish) {
+		UserContext context;
+		// Сюда только круглые данные
+		context.context = async_ecb_encrypt(source, key);
+		context.final = false;
+		futures.push(context);
+	}
+
+	// Посылаем сигнальный блок
+	UserContext context;
+	context.final = true;
+	context.context = async_ecb_encrypt(source, key);
+	futures.push(context);
+}
+
 size_t infinity_retriver(int count)
 {
 	while (futures.empty()) {
@@ -102,7 +127,7 @@ size_t cfb_encrypt_loader(const seconds &interval)
 		eq.pop();
 	}
 
-	return encrypted;
+	return encrypted * 8 / interval.count();
 }
 
 size_t cfb_decrypt_loader(const seconds &interval)
@@ -125,7 +150,7 @@ size_t cfb_decrypt_loader(const seconds &interval)
 		eq.pop();
 	}
 
-	return encrypted;
+	return encrypted * 8 / interval.count();
 }
 
 size_t ecb_encrypt_loader(const seconds &interval)
@@ -147,7 +172,7 @@ size_t ecb_encrypt_loader(const seconds &interval)
 		eq.pop();
 	}
 
-	return encrypted;
+	return encrypted * 8 / interval.count();
 }
 
 int main(int argc, char **argv)
@@ -173,16 +198,16 @@ int main(int argc, char **argv)
 //	auto rr1 = async(launch::async, cfb_encrypt_loader, ref(interval));
 //	auto rr2 = async(launch::async, cfb_decrypt_loader, ref(interval));
 //	auto rr3 = async(launch::async, ecb_encrypt_loader, ref(interval));
-//	auto loaded = rr1.get() + rr2.get() + rr3.get();
-//	cout << "loaded: " << loaded / interval.count() * 8 / 1000 << " Kbit/sec" << endl;
+//	auto rate1 = rr1.get() + rr2.get() + rr3.get();
+//	cout << "loaded: " << rate1 / 1000 << " Kbit/sec" << endl;
 
 	futures.set_capacity(1000);
-	thread loader1(infinity_loader, interval);
-	//thread loader2(infinity_loader, interval);
+	//thread infinity(infinity_loader, interval);
+	thread fixed(fixed_loader, interval);
 	auto rr = async(infinity_retriver, 1);
 	auto rate = rr.get();
-	loader1.join();
-	//loader2.join();
+	fixed.join();
+	//infinity.join();
 	cout << "loaded: " << rate / 1000 << " Kbit/sec" << endl;
 
 	return 0;
