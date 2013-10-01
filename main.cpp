@@ -64,7 +64,7 @@ void infinity_loader(const seconds &interval)
 
 void fixed_loader(const seconds &interval)
 {
-	vector<uint8_t> source(1000 * 8);
+	vector<uint8_t> source(10000 * 8);
 	vector<uint8_t> key(32);
 
 	default_random_engine generator(system_clock::now().time_since_epoch().count());
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 //	auto rate1 = rr1.get() + rr2.get() + rr3.get();
 //	cout << "loaded: " << rate1 / 1000 << " Kbit/sec" << endl;
 
-	futures.set_capacity(1000);
+	futures.set_capacity(100);
 	//thread infinity(infinity_loader, interval);
 	thread fixed(fixed_loader, interval);
 	auto rr = async(infinity_retriver, 1);

@@ -13,4 +13,3 @@ public:
 
 	const std::vector<CryptoEngineSlot> slots;
 };
-
