@@ -19,7 +19,8 @@ SOURCES += main.cpp \
     CryptoTest.cpp \
     CryptoEngineSSSE3.cpp \
     CryptoEngine.cpp \
-    CryptoRequestNull.cpp
+    CryptoRequestNull.cpp \
+    CpuSupport.cpp
 
 HEADERS += \
     CryptoRequest.h \
@@ -32,5 +33,6 @@ HEADERS += \
     CryptoRequestImit.h \
     CryptoEngineSSSE3.h \
     CryptoEngine.h \
-    CryptoRequestNull.h
+    CryptoRequestNull.h \
+    CpuSupport.h
 

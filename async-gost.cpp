@@ -2,6 +2,7 @@
 #include "async-gost.h"
 #include <cstring>
 #include <tbb/concurrent_queue.h>
+#include "CpuSupport.h"
 #include "CryptoEngineGeneric.h"
 #include "CryptoEngineSSSE3.h"
 #include "CryptoRequest.h"
@@ -20,9 +21,7 @@ void crypto_thread_encrypt()
 {
 	shared_ptr<CryptoEngine> engine = make_shared<CryptoEngineGeneric>();
 
-	// Шифратор должен доводить дело до конца
-	__builtin_cpu_init();
-	if (__builtin_cpu_supports("ssse3")) {
+	if (cpu_support_ssse3()) {
 		// WTF: В зависимости от опций компиляции этот шифратор может использовать avx
 		engine = make_shared<CryptoEngineSSSE3>();
 	}
