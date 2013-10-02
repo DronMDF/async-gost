@@ -108,6 +108,21 @@ void add_crypto_thread(crypto_engine_t type)
 	}
 }
 
+static
+ContextReply async_generic_action(const shared_ptr<CryptoRequest> &request, void (CryptoEngine::* action)())
+{
+	CryptoEngineGeneric engine;
+	request->init(engine.getSlot(0));
+	while(!request->isDone()) {
+		request->load(engine.getSlot(0));
+		(engine.*action)();
+		request->save(engine.getSlot(0));
+	}
+	request->submit();
+	return request->get_future().get();
+}
+
+static
 future<ContextReply> async_encrypt(const shared_ptr<CryptoRequest> &request)
 {
 	if (request->isDone()) {
@@ -117,18 +132,7 @@ future<ContextReply> async_encrypt(const shared_ptr<CryptoRequest> &request)
 	}
 
 	if (crypto_encrypt_threads.empty()) {
-		// Режим без выделенных потоков
-		return async([request]{
-			CryptoEngineGeneric engine;
-			request->init(engine.getSlot(0));
-			while(!request->isDone()) {
-				request->load(engine.getSlot(0));
-				engine.encrypt();
-				request->save(engine.getSlot(0));
-			}
-			request->submit();
-			return request->get_future().get();
-		});
+		return async(async_generic_action, request, &CryptoEngine::encrypt);
 	}
 
 	crypto_encrypt_tasks.push(request);
@@ -157,17 +161,7 @@ future<ContextReply> async_imit(const vector<uint8_t> &data, const vector<uint8_
 	auto request = make_shared<CryptoRequestImit>(data, key);
 
 	if (crypto_imit_threads.empty()) {
-		return async([request]{
-			CryptoEngineGeneric engine;
-			request->init(engine.getSlot(0));
-			while(!request->isDone()) {
-				request->load(engine.getSlot(0));
-				engine.imit();
-				request->save(engine.getSlot(0));
-			}
-			request->submit();
-			return request->get_future().get();
-		});
+		return async(async_generic_action, request, &CryptoEngine::imit);
 	}
 
 	crypto_imit_tasks.push(request);
