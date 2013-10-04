@@ -44,3 +44,4 @@ ssse3.dependency_type = TYPE_C
 ssse3.variable_out = OBJECTS
 
 QMAKE_EXTRA_COMPILERS += ssse3
+OTHER_FILES += $$SSSE3_SOURCES
