@@ -155,6 +155,7 @@ void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, 
 BOOST_AUTO_TEST_CASE(encryptShouldBeCorrect)
 {
 	if (!cpu_support_ssse3()) {
+		cout << "CPU not support ssse3, test skipped" << endl;
 		return;
 	}
 

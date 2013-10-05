@@ -19,5 +19,11 @@ bool cpu_support_avx()
 
 bool cpu_support_avx2()
 {
+#ifdef __GNUC__
+#if __GNUC_PREREQ(4,8)
+	__builtin_cpu_init();
+	return __builtin_cpu_supports("avx2");
+#endif
+#endif
 	return true;
 }

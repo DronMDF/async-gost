@@ -33,9 +33,9 @@ CryptoEngineAVX2::CryptoEngineAVX2()
 	set_sbox(FapsiSubst);
 }
 
-CryptoEngineAVX2::v16qi CryptoEngineAVX2::expand_tab(const uint8_t sbox[64], int li, int hi) const
+CryptoEngineAVX2::v32qi CryptoEngineAVX2::expand_tab(const uint8_t sbox[64], int li, int hi) const
 {
-	v16qi tab;
+	v32qi tab;
 	for (int i = 0; i < 16; i++) {
 		reinterpret_cast<uint8_t *>(&tab)[i] =
 			(sbox[i * 4 + li] & 0x0f) | (sbox[i * 4 + hi] & 0xf0);
@@ -60,30 +60,40 @@ void CryptoEngineAVX2::set_key(int slot, const void *source_key)
 	}
 }
 
-CryptoEngineAVX2::v4si CryptoEngineAVX2::step(v4si a, v4si b, v4si key) const
+CryptoEngineAVX2::v8si CryptoEngineAVX2::step(v8si a, v8si b, v8si key) const
 {
-	static const v4si lo_mask = { 0x000f000f, 0x000f000f, 0x000f000f, 0x000f000f };
-	static const v4si hi_mask = { 0x0f000f00, 0x0f000f00, 0x0f000f00, 0x0f000f00 };
+	static const v8si lo_mask = { 0x000f000f, 0x000f000f, 0x000f000f, 0x000f000f,
+					0x000f000f, 0x000f000f, 0x000f000f, 0x000f000f };
+	static const v8si hi_mask = { 0x0f000f00, 0x0f000f00, 0x0f000f00, 0x0f000f00,
+					0x0f000f00, 0x0f000f00, 0x0f000f00, 0x0f000f00 };
 
-	static const v16qi b0_mask = { 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00,
+	static const v32qi b0_mask = { 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00,
+					0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00,
+					0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00,
 					0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00 };
-	static const v16qi b1_mask = { 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00,
+	static const v32qi b1_mask = { 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00,
+					0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00,
+					0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00,
 					0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00 };
-	static const v16qi b2_mask = { 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0,
+	static const v32qi b2_mask = { 0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0,
+					0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0,
+					0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0,
 					0x00, 0x00, 0x0f, 0xf0, 0x00, 0x00, 0x0f, 0xf0 };
-	static const v16qi b3_mask = { 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f,
+	static const v32qi b3_mask = { 0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f,
+					0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f,
+					0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f,
 					0x00, 0x00, 0xf0, 0x0f, 0x00, 0x00, 0xf0, 0x0f };
 
-	const v4si lo = key + b;
-	const v4si hi = __builtin_ia32_psrldi128(lo, 4);
-	const v4si loc = (lo & lo_mask) | (hi & hi_mask);
-	const v4si hic = (lo & hi_mask) | (hi & lo_mask);
-	const v16qi b0 = __builtin_ia32_pshufb128(tab1, loc) & b0_mask; // 0x????1??0
-	const v16qi b1 = __builtin_ia32_pshufb128(tab2, hic) & b1_mask; // 0x?????10?
-	const v16qi b2 = __builtin_ia32_pshufb128(tab3, loc) & b2_mask; // 0x3??2????
-	const v16qi b3 = __builtin_ia32_pshufb128(tab4, hic) & b3_mask; // 0x?32?????
-	const v4si i1 = b0 | b1 | b2 | b3;
-	return a ^ (__builtin_ia32_pslldi128(i1, 11) | __builtin_ia32_psrldi128(i1, 21));
+	const v8si lo = key + b;
+	const v8si hi = __builtin_ia32_psrldi256(lo, 4);
+	const v8si loc = (lo & lo_mask) | (hi & hi_mask);
+	const v8si hic = (lo & hi_mask) | (hi & lo_mask);
+	const v32qi b0 = __builtin_ia32_pshufb256(tab1, loc) & b0_mask; // 0x????1??0
+	const v32qi b1 = __builtin_ia32_pshufb256(tab2, hic) & b1_mask; // 0x?????10?
+	const v32qi b2 = __builtin_ia32_pshufb256(tab3, loc) & b2_mask; // 0x3??2????
+	const v32qi b3 = __builtin_ia32_pshufb256(tab4, hic) & b3_mask; // 0x?32?????
+	const v8si i1 = b0 | b1 | b2 | b3;
+	return a ^ (__builtin_ia32_pslldi256(i1, 11) | __builtin_ia32_psrldi256(i1, 21));
 }
 
 void CryptoEngineAVX2::imit()
@@ -154,7 +164,8 @@ void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, 
 
 BOOST_AUTO_TEST_CASE(encryptShouldBeCorrect)
 {
-	if (!cpu_support_ssse3()) {
+	if (!cpu_support_avx2()) {
+		cout << "CPU not support avx2, test skipped" << endl;
 		return;
 	}
 

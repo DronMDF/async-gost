@@ -18,22 +18,22 @@ public:
 	void encrypt() override;
 
 private:
-	typedef unsigned v4si __attribute__ ((vector_size (16)));
-	typedef unsigned char v16qi __attribute__ ((vector_size (16)));
+	typedef unsigned v8si __attribute__ ((vector_size (32)));
+	typedef unsigned char v32qi __attribute__ ((vector_size (32)));
 
-	v16qi expand_tab(const uint8_t sbox[64], int li, int hi) const;
+	v32qi expand_tab(const uint8_t sbox[64], int li, int hi) const;
 	void set_sbox(const uint8_t sbox[64]);
 	void set_key(int slot, const void *source_key);
-	v4si step(v4si a, v4si b, v4si key) const;
+	v8si step(v8si a, v8si b, v8si key) const;
 
-	v4si A;
-	v4si B;
-	v4si key[8];
+	v8si A;
+	v8si B;
+	v8si key[8];
 
-	v16qi tab1;
-	v16qi tab2;
-	v16qi tab3;
-	v16qi tab4;
+	v32qi tab1;
+	v32qi tab2;
+	v32qi tab3;
+	v32qi tab4;
 
 	std::array<CryptoEngineSlot, 4> slots;
 };
