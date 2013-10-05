@@ -34,7 +34,8 @@ HEADERS += \
     CryptoEngine.h \
     CryptoRequestNull.h \
     CpuSupport.h \
-    CryptoThread.h
+    CryptoThread.h \
+    CryptoEngineAVX2.h
 
 SSSE3_SOURCES = CryptoEngineSSSE3.cpp
 ssse3.input = SSSE3_SOURCES
@@ -43,5 +44,12 @@ ssse3.commands = $${QMAKE_CXX} $(CXXFLAGS) -mtune=core2 -mssse3 -flax-vector-con
 ssse3.dependency_type = TYPE_C
 ssse3.variable_out = OBJECTS
 
-QMAKE_EXTRA_COMPILERS += ssse3
-OTHER_FILES += $$SSSE3_SOURCES
+AVX2_SOURCES = CryptoEngineAVX2.cpp
+avx2.input = AVX2_SOURCES
+avx2.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
+avx2.commands = $${QMAKE_CXX} $(CXXFLAGS) -mtune=core-avx2 -mavx2 -flax-vector-conversions $(INCPATH) -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
+avx2.dependency_type = TYPE_C
+avx2.variable_out = OBJECTS
+
+QMAKE_EXTRA_COMPILERS += ssse3 avx2
+OTHER_FILES += $$SSSE3_SOURCES $$AVX2_SOURCES
