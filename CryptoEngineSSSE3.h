@@ -26,14 +26,14 @@ private:
 	void set_key(int slot, const void *source_key);
 	v4si step(v4si a, v4si b, v4si key) const;
 
-	v4si A;
-	v4si B;
-	v4si key[8];
+	v4si A __attribute__((aligned(16)));
+	v4si B __attribute__((aligned(16)));
+	v4si key[8] __attribute__((aligned(16)));
 
-	v16qi tab1;
-	v16qi tab2;
-	v16qi tab3;
-	v16qi tab4;
+	v16qi tab1 __attribute__((aligned(16)));
+	v16qi tab2 __attribute__((aligned(16)));
+	v16qi tab3 __attribute__((aligned(16)));
+	v16qi tab4 __attribute__((aligned(16)));
 
 	std::array<CryptoEngineSlot, 4> slots;
 };

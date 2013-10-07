@@ -3,7 +3,7 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 QMAKE_CXXFLAGS += -std=c++11
-QMAKE_CXXFLAGS_RELEASE += -march=pentium4 -fomit-frame-pointer
+QMAKE_CXXFLAGS_RELEASE += -march=nocona -fomit-frame-pointer
 # -mno-avx Позволяет отключить оптимизацию для avx процессоров, а то код получается разный
 LIBS += -lboost_unit_test_framework -ltbb
 
