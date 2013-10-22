@@ -53,7 +53,7 @@ bool CryptoThread::isTerminator(const shared_ptr<CryptoRequest> &request) const
 void CryptoThread::thread_function()
 {
 	auto engine = createEngine();
-	const auto slots = engine->getSlots();
+	auto slots = engine->getSlots();
 	vector<shared_ptr<CryptoRequest>> request(slots.size());
 	bool terminated = false;
 	while(true) {

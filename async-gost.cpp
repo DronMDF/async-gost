@@ -26,7 +26,7 @@ void crypto_thread_encrypt()
 		engine = make_shared<CryptoEngineSSSE3>();
 	}
 
-	const vector<CryptoEngineSlot> slots = engine->getSlots();
+	vector<CryptoEngineSlot> slots = engine->getSlots();
 	vector<shared_ptr<CryptoRequest>> request(slots.size());
 	while(true) {
 		int active_slots = slots.size();
@@ -75,7 +75,7 @@ void crypto_thread_imit()
 		engine = make_shared<CryptoEngineSSSE3>();
 	}
 
-	const vector<CryptoEngineSlot> slots = engine->getSlots();
+	vector<CryptoEngineSlot> slots = engine->getSlots();
 	vector<shared_ptr<CryptoRequest>> request(slots.size());
 
 	while(true) {
@@ -133,7 +133,7 @@ static
 ContextReply async_generic_action(const shared_ptr<CryptoRequest> &request, void (CryptoEngine::* action)())
 {
 	CryptoEngineGeneric engine;
-	const auto slots = engine.getSlots();
+	auto slots = engine.getSlots();
 	request->init(&slots[0]);
 	while(!request->isDone()) {
 		request->load(&slots[0]);

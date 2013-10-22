@@ -17,17 +17,17 @@ CryptoRequestECBEncrypt::CryptoRequestECBEncrypt(const vector<uint8_t> &source,
 	data.assign(data_ptr, data_ptr + source.size() / sizeof(uint32_t));
 }
 
-void CryptoRequestECBEncrypt::init(const CryptoEngineSlot *slot) const
+void CryptoRequestECBEncrypt::init(CryptoEngineSlot *slot) const
 {
 	slot->setKey(&key[0]);
 }
 
-void CryptoRequestECBEncrypt::load(const CryptoEngineSlot *slot) const
+void CryptoRequestECBEncrypt::load(CryptoEngineSlot *slot) const
 {
 	slot->setBlock(data[index], data[index + 1]);
 }
 
-void CryptoRequestECBEncrypt::save(const CryptoEngineSlot *slot)
+void CryptoRequestECBEncrypt::save(CryptoEngineSlot *slot)
 {
 	slot->getData(&data[index], &data[index + 1]);
 	index += 2;
