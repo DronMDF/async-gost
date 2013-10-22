@@ -10,9 +10,7 @@ class CryptoEngineSSSE3 : public CryptoEngine
 {
 public:
 	CryptoEngineSSSE3();
-
-	unsigned getSlotCount() const override;
-	const CryptoEngineSlot *getSlot(unsigned slot) const override;
+	std::vector<CryptoEngineSlot> getSlots() override;
 
 	void imit() override;
 	void encrypt() override;
@@ -34,6 +32,4 @@ private:
 	v16qi tab2 __attribute__((aligned(16)));
 	v16qi tab3 __attribute__((aligned(16)));
 	v16qi tab4 __attribute__((aligned(16)));
-
-	std::array<CryptoEngineSlot, 4> slots;
 };

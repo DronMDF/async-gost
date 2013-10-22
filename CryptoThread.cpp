@@ -53,14 +53,15 @@ bool CryptoThread::isTerminator(const shared_ptr<CryptoRequest> &request) const
 void CryptoThread::thread_function()
 {
 	auto engine = createEngine();
-	vector<shared_ptr<CryptoRequest>> request(engine->getSlotCount());
+	const auto slots = engine->getSlots();
+	vector<shared_ptr<CryptoRequest>> request(slots.size());
 	bool terminated = false;
 	while(true) {
-		int active_slots = engine->getSlotCount();
-		for (unsigned s = 0; s < engine->getSlotCount(); s++) {
+		int active_slots = slots.size();
+		for (unsigned s = 0; s < slots.size(); s++) {
 			if (!request[s]) {
 				if (!terminated && queue->try_pop(request[s])) {
-					request[s]->init(engine->getSlot(s));
+					request[s]->init(&slots[s]);
 					if (isTerminator(request[s])) {
 						terminated = true;
 					}
@@ -70,7 +71,7 @@ void CryptoThread::thread_function()
 				}
 			}
 
-			request[s]->load(engine->getSlot(s));
+			request[s]->load(&slots[s]);
 		}
 
 		if (active_slots == 0) {
@@ -85,14 +86,14 @@ void CryptoThread::thread_function()
 				break;
 			}
 
-			request[0]->init(engine->getSlot(0));
-			request[0]->load(engine->getSlot(0));
+			request[0]->init(&slots[0]);
+			request[0]->load(&slots[0]);
 		}
 
 		engine->encrypt();
 
-		for (unsigned s = 0; s < engine->getSlotCount(); s++) {
-			request[s]->save(engine->getSlot(s));
+		for (unsigned s = 0; s < slots.size(); s++) {
+			request[s]->save(&slots[s]);
 
 			if (request[s]->isDone()) {
 				request[s]->submit();

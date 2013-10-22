@@ -10,9 +10,7 @@ class CryptoEngineAVX2 : public CryptoEngine
 {
 public:
 	CryptoEngineAVX2();
-
-	unsigned getSlotCount() const override;
-	const CryptoEngineSlot *getSlot(unsigned slot) const override;
+	std::vector<CryptoEngineSlot> getSlots() override;
 
 	void imit() override;
 	void encrypt() override;
@@ -34,6 +32,4 @@ private:
 	v32qi tab2 __attribute__((aligned(32)));
 	v32qi tab3 __attribute__((aligned(32)));
 	v32qi tab4 __attribute__((aligned(32)));
-
-	std::array<CryptoEngineSlot, 4> slots;
 };

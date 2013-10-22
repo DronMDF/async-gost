@@ -90,29 +90,26 @@ void CryptoEngineGeneric::encrypt()
 	B = step(B, A, key[0]);
 }
 
-unsigned CryptoEngineGeneric::getSlotCount() const
+vector<CryptoEngineSlot> CryptoEngineGeneric::getSlots()
 {
-	return 1;
-}
-
-const CryptoEngineSlot *CryptoEngineGeneric::getSlot(unsigned s) const
-{
-	assert(s == 0);
-	return &slot;
+	return { CryptoEngineSlot(bind(memcpy, &key[0], _1, sizeof(key)), &A, &B) };
 }
 
 BOOST_AUTO_TEST_SUITE(suiteCryptoEngineGeneric)
 
 void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, uint32_t eA, uint32_t eB)
 {
-	CryptoEngineGeneric engine;
-	engine.getSlot(0)->setKey(&key[0]);
-	engine.getSlot(0)->setBlock(A, B);
-	engine.encrypt();
-	uint32_t rA, rB;
-	engine.getSlot(0)->getData(&rA, &rB);
-	BOOST_REQUIRE_EQUAL(rA, eA);
-	BOOST_REQUIRE_EQUAL(rB, eB);
+	shared_ptr<CryptoEngine> engine = make_shared<CryptoEngineGeneric>();
+	const vector<CryptoEngineSlot> slots = engine->getSlots();
+	for (auto slot: slots) {
+		slot.setKey(&key[0]);
+		slot.setBlock(A, B);
+		engine->encrypt();
+		uint32_t rA, rB;
+		slot.getData(&rA, &rB);
+		BOOST_REQUIRE_EQUAL(rA, eA);
+		BOOST_REQUIRE_EQUAL(rB, eB);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(encryptShouldBeCorrect)

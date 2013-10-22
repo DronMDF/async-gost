@@ -9,9 +9,7 @@ class CryptoEngineGeneric : public CryptoEngine
 {
 public:
 	CryptoEngineGeneric();
-
-	unsigned getSlotCount() const override;
-	const CryptoEngineSlot *getSlot(unsigned slot) const override;
+	std::vector<CryptoEngineSlot> getSlots() override;
 
 	void imit() override;
 	void encrypt() override;

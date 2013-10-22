@@ -26,33 +26,34 @@ void crypto_thread_encrypt()
 		engine = make_shared<CryptoEngineSSSE3>();
 	}
 
-	vector<shared_ptr<CryptoRequest>> request(engine->getSlotCount());
+	const vector<CryptoEngineSlot> slots = engine->getSlots();
+	vector<shared_ptr<CryptoRequest>> request(slots.size());
 	while(true) {
-		int active_slots = engine->getSlotCount();
-		for (unsigned s = 0; s < engine->getSlotCount(); s++) {
+		int active_slots = slots.size();
+		for (unsigned s = 0; s < slots.size(); s++) {
 			if (!request[s]) {
 				if (crypto_encrypt_tasks.try_pop(request[s])) {;
-					request[s]->init(engine->getSlot(s));
+					request[s]->init(&slots[s]);
 				} else {
 					request[s] = make_shared<CryptoRequestNull>();
 					active_slots--;
 				}
 			}
 
-			request[s]->load(engine->getSlot(s));
+			request[s]->load(&slots[s]);
 		}
 
 		if (active_slots == 0) {
 			// Заданий нет - ждем до первого задания
 			crypto_encrypt_tasks.pop(request[0]);
-			request[0]->init(engine->getSlot(0));
-			request[0]->load(engine->getSlot(0));
+			request[0]->init(&slots[0]);
+			request[0]->load(&slots[0]);
 		}
 
 		engine->encrypt();
 
-		for (unsigned s = 0; s < engine->getSlotCount(); s++) {
-			request[s]->save(engine->getSlot(s));
+		for (unsigned s = 0; s < slots.size(); s++) {
+			request[s]->save(&slots[s]);
 
 			if (request[s]->isDone()) {
 				request[s]->submit();
@@ -67,22 +68,42 @@ static tbb::concurrent_bounded_queue<shared_ptr<CryptoRequest>> crypto_imit_task
 
 void crypto_thread_imit()
 {
-	CryptoEngineGeneric engine;
-	vector<shared_ptr<CryptoRequest>> request(engine.getSlotCount());
+	shared_ptr<CryptoEngine> engine = make_shared<CryptoEngineGeneric>();
+
+	if (cpu_support_ssse3()) {
+		// WTF: В зависимости от опций компиляции этот шифратор может использовать avx
+		engine = make_shared<CryptoEngineSSSE3>();
+	}
+
+	const vector<CryptoEngineSlot> slots = engine->getSlots();
+	vector<shared_ptr<CryptoRequest>> request(slots.size());
+
 	while(true) {
-		for (unsigned s = 0; s < engine.getSlotCount(); s++) {
+		int active_slots = slots.size();
+		for (unsigned s = 0; s < slots.size(); s++) {
 			if (!request[s]) {
-				crypto_imit_tasks.pop(request[s]);
-				request[s]->init(engine.getSlot(s));
+				if (crypto_encrypt_tasks.try_pop(request[s])) {;
+					request[s]->init(&slots[s]);
+				} else {
+					request[s] = make_shared<CryptoRequestNull>();
+					active_slots--;
+				}
 			}
 
-			request[s]->load(engine.getSlot(s));
+			request[s]->load(&slots[s]);
 		}
 
-		engine.imit();
+		if (active_slots == 0) {
+			// Заданий нет - ждем до первого задания
+			crypto_encrypt_tasks.pop(request[0]);
+			request[0]->init(&slots[0]);
+			request[0]->load(&slots[0]);
+		}
 
-		for (unsigned s = 0; s < engine.getSlotCount(); s++) {
-			request[s]->save(engine.getSlot(s));
+		engine->imit();
+
+		for (unsigned s = 0; s < slots.size(); s++) {
+			request[s]->save(&slots[s]);
 
 			if (request[s]->isDone()) {
 				request[s]->submit();
@@ -112,11 +133,12 @@ static
 ContextReply async_generic_action(const shared_ptr<CryptoRequest> &request, void (CryptoEngine::* action)())
 {
 	CryptoEngineGeneric engine;
-	request->init(engine.getSlot(0));
+	const auto slots = engine.getSlots();
+	request->init(&slots[0]);
 	while(!request->isDone()) {
-		request->load(engine.getSlot(0));
+		request->load(&slots[0]);
 		(engine.*action)();
-		request->save(engine.getSlot(0));
+		request->save(&slots[0]);
 	}
 	request->submit();
 	return request->get_future().get();

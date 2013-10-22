@@ -12,12 +12,6 @@ using namespace std;
 using namespace std::placeholders;
 
 CryptoEngineAVX2::CryptoEngineAVX2()
-	: slots({
-		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 0, _1), &reinterpret_cast<uint32_t *>(&A)[0], &reinterpret_cast<uint32_t *>(&B)[0]),
-		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 1, _1), &reinterpret_cast<uint32_t *>(&A)[1], &reinterpret_cast<uint32_t *>(&B)[1]),
-		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 2, _1), &reinterpret_cast<uint32_t *>(&A)[2], &reinterpret_cast<uint32_t *>(&B)[2]),
-		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 3, _1), &reinterpret_cast<uint32_t *>(&A)[3], &reinterpret_cast<uint32_t *>(&B)[3]),
-	})
 {
 	const uint8_t FapsiSubst[] = {
 		0xc4, 0xed, 0x83, 0xc9, 0x92, 0x98, 0xfe, 0x6b,
@@ -135,15 +129,18 @@ void CryptoEngineAVX2::encrypt()
 	B = step(B, A, key[0]);
 }
 
-unsigned CryptoEngineAVX2::getSlotCount() const
+vector<CryptoEngineSlot> CryptoEngineAVX2::getSlots()
 {
-	return slots.size();
-}
-
-const CryptoEngineSlot *CryptoEngineAVX2::getSlot(unsigned slot) const
-{
-	assert(slot < 4);
-	return &slots[slot];
+	return {
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 0, _1), &reinterpret_cast<uint32_t *>(&A)[0], &reinterpret_cast<uint32_t *>(&B)[0]),
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 1, _1), &reinterpret_cast<uint32_t *>(&A)[1], &reinterpret_cast<uint32_t *>(&B)[1]),
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 2, _1), &reinterpret_cast<uint32_t *>(&A)[2], &reinterpret_cast<uint32_t *>(&B)[2]),
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 3, _1), &reinterpret_cast<uint32_t *>(&A)[3], &reinterpret_cast<uint32_t *>(&B)[3]),
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 4, _1), &reinterpret_cast<uint32_t *>(&A)[4], &reinterpret_cast<uint32_t *>(&B)[4]),
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 5, _1), &reinterpret_cast<uint32_t *>(&A)[5], &reinterpret_cast<uint32_t *>(&B)[5]),
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 6, _1), &reinterpret_cast<uint32_t *>(&A)[6], &reinterpret_cast<uint32_t *>(&B)[6]),
+		CryptoEngineSlot(bind(&CryptoEngineAVX2::set_key, this, 7, _1), &reinterpret_cast<uint32_t *>(&A)[7], &reinterpret_cast<uint32_t *>(&B)[7]),
+	};
 }
 
 BOOST_AUTO_TEST_SUITE(suiteCryptoEngineAVX2)
@@ -151,12 +148,13 @@ BOOST_AUTO_TEST_SUITE(suiteCryptoEngineAVX2)
 void CUSTOM_REQUIRE_ENCRYPT(const vector<uint8_t> &key, uint32_t A, uint32_t B, uint32_t eA, uint32_t eB)
 {
 	shared_ptr<CryptoEngine> engine = make_shared<CryptoEngineAVX2>();
-	for (unsigned s = 0; s < engine->getSlotCount(); s++) {
-		engine->getSlot(s)->setKey(&key[0]);
-		engine->getSlot(s)->setBlock(A, B);
+	const vector<CryptoEngineSlot> slots = engine->getSlots();
+	for (auto slot: slots) {
+		slot.setKey(&key[0]);
+		slot.setBlock(A, B);
 		engine->encrypt();
 		uint32_t rA, rB;
-		engine->getSlot(s)->getData(&rA, &rB);
+		slot.getData(&rA, &rB);
 		BOOST_REQUIRE_EQUAL(rA, eA);
 		BOOST_REQUIRE_EQUAL(rB, eB);
 	}
