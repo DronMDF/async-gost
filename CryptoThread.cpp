@@ -90,7 +90,7 @@ void CryptoThread::thread_function()
 			request[0]->load(&slots[0]);
 		}
 
-		engine->encrypt();
+		(engine->*action)();
 
 		for (unsigned s = 0; s < slots.size(); s++) {
 			request[s]->save(&slots[s]);
