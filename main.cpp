@@ -4,11 +4,9 @@
 #include <future>
 #include <iostream>
 #include <queue>
-#define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_ALTERNATIVE_INIT_API
-#include <boost/test/unit_test.hpp>
 #include <tbb/concurrent_queue.h>
 #include "async-gost.h"
+#include "upp11.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -87,24 +85,29 @@ void fixed_loader(const seconds &interval)
 	futures.push(context);
 }
 
-size_t infinity_retriver(int count)
+vector<size_t> infinity_retriver(int count)
 {
 	while (futures.empty()) {
 		sleep(1);
 	}
-	const high_resolution_clock::time_point start = high_resolution_clock::now();
+
+	vector<size_t> bench;
 	int ongone = count;
-	size_t processed = 0;
 	while (ongone > 0) {
-		UserContext context;
-		futures.pop(context);
-		ongone -= context.final ? 1 : 0;
-		const auto value = context.context.get();
-		processed += value.data.size();
+		size_t processed = 0;
+		const high_resolution_clock::time_point iterstop = high_resolution_clock::now() + seconds(1);
+		while (high_resolution_clock::now() < iterstop && ongone > 0) {
+			UserContext context;
+			futures.pop(context);
+			ongone -= context.final ? 1 : 0;
+			const auto value = context.context.get();
+			processed += value.data.size();
+		}
+
+		bench.push_back(processed * 8);
 	}
 
-	const auto period = high_resolution_clock::now() - start;
-	return processed * 8 / duration_cast<seconds>(period).count();
+	return bench;
 }
 
 size_t cfb_encrypt_loader(const seconds &interval)
@@ -175,9 +178,9 @@ size_t ecb_encrypt_loader(const seconds &interval)
 	return encrypted * 8 / interval.count();
 }
 
-int main(int argc, char **argv)
+int main(int, char **)
 {
-	if (boost::unit_test::unit_test_main([](){ return true; }, argc, argv) != 0) {
+	if (upp11::TestCollection::runAllTests(time(0), false, true) != 0) {
 		return -1;
 	}
 
@@ -185,7 +188,7 @@ int main(int argc, char **argv)
 	cout << "Тестирование без потоков прошло успешно;" << endl;
 
 	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
-	add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
+	//add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
 	//add_crypto_thread(CRYPTO_ENGINE_ENCRYPT_GENERIC);
 	//add_crypto_thread(CRYPTO_ENGINE_IMIT_GENERIC);
 
@@ -201,14 +204,17 @@ int main(int argc, char **argv)
 //	auto rate1 = rr1.get() + rr2.get() + rr3.get();
 //	cout << "loaded: " << rate1 / 1000 << " Kbit/sec" << endl;
 
-	futures.set_capacity(1000);
+	futures.set_capacity(10000);
 	thread infinity(infinity_loader, interval);
 	//thread fixed(fixed_loader, interval);
 	auto rr = async(infinity_retriver, 1);
-	auto rate = rr.get();
+	const auto rate = rr.get();
 	//fixed.join();
 	infinity.join();
-	cout << "loaded: " << rate / 1000 << " Kbit/sec" << endl;
+
+	for (const auto r: rate) {
+		cout << "rate: " << r / 1000 << "Kbit/sec" << endl;
+	}
 
 	return 0;
 }

@@ -1,11 +1,11 @@
 
 #include "CryptoThread.h"
-#include <boost/test/unit_test.hpp>
 #include "async-gost.h"
 #include "CpuSupport.h"
 #include "CryptoEngineGeneric.h"
 #include "CryptoEngineSSSE3.h"
 #include "CryptoRequestNull.h"
+#include "upp11.h"
 
 using namespace std;
 
@@ -90,7 +90,7 @@ void CryptoThread::thread_function()
 			request[0]->load(&slots[0]);
 		}
 
-		(engine->*action)();
+		(engine.get()->*action)();
 
 		for (unsigned s = 0; s < slots.size(); s++) {
 			request[s]->save(&slots[s]);
@@ -103,13 +103,13 @@ void CryptoThread::thread_function()
 	}
 }
 
-BOOST_AUTO_TEST_SUITE(suiteCryptoThread)
+UP_SUITE_BEGIN(suiteCryptoThread)
 
-BOOST_AUTO_TEST_CASE(CryptoThreadShouldJoin)
+UP_TEST(CryptoThreadShouldJoin)
 {
 	tbb::concurrent_bounded_queue<std::shared_ptr<CryptoRequest>> queue;
 	CryptoThread joined_thread(&CryptoEngine::encrypt, &queue);
 	// Все, тест на этом закончен
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+UP_SUITE_END()

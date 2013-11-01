@@ -5,7 +5,7 @@ CONFIG -= qt
 QMAKE_CXXFLAGS += -std=c++11
 QMAKE_CXXFLAGS_RELEASE += -march=nocona -fomit-frame-pointer
 # -mno-avx Позволяет отключить оптимизацию для avx процессоров, а то код получается разный
-LIBS += -lboost_unit_test_framework -ltbb
+LIBS += -ltbb
 
 SOURCES += main.cpp \
     async-gost.cpp \
@@ -35,7 +35,8 @@ HEADERS += \
     CryptoRequestNull.h \
     CpuSupport.h \
     CryptoThread.h \
-    CryptoEngineAVX2.h
+    CryptoEngineAVX2.h \
+    upp11.h
 
 SSSE3_SOURCES = CryptoEngineSSSE3.cpp
 ssse3.input = SSSE3_SOURCES
