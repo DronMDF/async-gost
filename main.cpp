@@ -180,7 +180,7 @@ size_t ecb_encrypt_loader(const seconds &interval)
 
 int main(int, char **)
 {
-	if (upp11::TestCollection::runAllTests(time(0), false, true) != 0) {
+	if (!upp11::TestCollection::runAllTests(time(0), false, true)) {
 		return -1;
 	}
 
