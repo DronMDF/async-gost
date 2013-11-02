@@ -11,7 +11,6 @@
 
 using namespace std;
 using namespace std::placeholders;
-using namespace upp11;
 
 CryptoEngineSSSE3::CryptoEngineSSSE3()
 {

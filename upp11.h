@@ -239,6 +239,57 @@ public:
 	}
 };
 
+template <typename E>
+struct TestExceptionChecker {
+	const std::string file;
+	const int line;
+	const std::string extype;
+
+	TestExceptionChecker(const std::string &file, int line, const std::string &extype)
+		: file(file), line(line), extype(extype) {}
+
+	void check(const std::function<void ()> &f) {
+		try {
+			f();
+		} catch (const E &e) {
+			return;
+		} catch (...) {
+		}
+		std::cout << file << "(" << line << "): expected exception "
+			<< extype << " not throw" << std::endl;
+		throw upp11::TestException();
+	}
+
+	void check(const std::string &message, const std::function<void ()> &f) {
+		if (!std::is_convertible<E, std::exception>::value) {
+			std::cout << file << "(" << line << "): expected exception "
+				<< extype << " is not child of std::exception" << std::endl;
+			throw upp11::TestException();
+		}
+		bool catched = false;
+		try {
+			try {
+				f();
+			} catch (const E &) {
+				catched = true;
+				throw;
+			}
+		} catch (const std::exception &e) {
+			if (catched) {
+				if (e.what() == message) { return; }
+				std::cout << file << "(" << line << "): check exception "
+					<< extype << "(\"" << message << "\") failed" << std::endl;
+				std::cout << "\tcatched exception: \"" << e.what() << "\"" << std::endl;
+				throw upp11::TestException();
+			}
+		} catch (...) {
+		}
+		std::cout << file << "(" << line << "): expected exception "
+			<< extype << "(\"" << message << "\") not throw" << std::endl;
+		throw upp11::TestException();
+	}
+};
+
 class TestMain {
 public:
 	int main(int argc, char **argv) {
@@ -277,28 +328,28 @@ namespace name { \
 }
 
 #define UP_TEST(name) \
-struct Test##name : private upp11::TestBase { \
+struct Test##name { \
 	void run(); \
 }; \
 static upp11::TestInvokerTrivial<Test##name> test##name##invoker(#name); \
 void Test##name::run()
 
 #define UP_FIXTURE_TEST(name, fixture) \
-struct Test##name : private upp11::TestBase, public fixture { \
+struct Test##name : public fixture { \
 	void run(); \
 }; \
 static upp11::TestInvokerTrivial<Test##name> test##name##invoker(#name); \
 void Test##name::run()
 
 #define UP_PARAMETRIZED_TEST(name, params, ...) \
-struct Test##name : private upp11::TestBase { \
+struct Test##name { \
 	void run(const tuple<__VA_ARGS__> &params); \
 }; \
 static upp11::TestInvokerParametrized<Test##name, __VA_ARGS__> test##name##invoker(#name, params); \
 void Test##name::run(const tuple<__VA_ARGS__> &params)
 
 #define UP_FIXTURE_PARAMETRIZED_TEST(name, fixture, params, ...) \
-struct Test##name : private upp11::TestBase, public fixture { \
+struct Test##name : public fixture { \
 	void run(const tuple<__VA_ARGS__> &params); \
 }; \
 static upp11::TestInvokerParametrized<Test##name, __VA_ARGS__> test##name##invoker(#name, params); \
@@ -307,19 +358,22 @@ void Test##name::run(const tuple<__VA_ARGS__> &params)
 #define UP_ASSERT(expr) \
 if (!(expr)) { \
 	std::cout << __FILE__ "(" << __LINE__ << "): check " #expr " failed" << std::endl; \
-	throw TestException(); \
+	throw upp11::TestException(); \
 }
 
 #define UP_ASSERT_EQUAL(...) \
-if (!isEqual(__VA_ARGS__)) { \
+if (!upp11::TestBase().isEqual(__VA_ARGS__)) { \
 	std::cout << __FILE__ "(" << __LINE__ << "): check equal (" #__VA_ARGS__ ") failed" << std::endl; \
-	std::cout << "\t" << asPrintable(__VA_ARGS__) << std::endl; \
-	throw TestException(); \
+	std::cout << "\t" << upp11::TestBase().asPrintable(__VA_ARGS__) << std::endl; \
+	throw upp11::TestException(); \
 }
 
 #define UP_ASSERT_NE(...) \
-if (isEqual(__VA_ARGS__)) { \
+if (upp11::TestBase().isEqual(__VA_ARGS__)) { \
 	std::cout << __FILE__ "(" << __LINE__ << "): check not equal (" #__VA_ARGS__ ") failed" << std::endl; \
-	std::cout << "\t" << asPrintable(__VA_ARGS__) << std::endl; \
-	throw TestException(); \
+	std::cout << "\t" << upp11::TestBase().asPrintable(__VA_ARGS__) << std::endl; \
+	throw upp11::TestException(); \
 }
+
+#define UP_ASSERT_EXCEPTION(extype, ...) \
+upp11::TestExceptionChecker<extype>(__FILE__, __LINE__, #extype).check(__VA_ARGS__)

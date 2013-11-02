@@ -9,7 +9,6 @@
 
 using namespace std;
 using namespace std::placeholders;
-using namespace upp11;
 
 CryptoEngineGeneric::CryptoEngineGeneric()
 	: slot(bind(memcpy, &key[0], _1, sizeof(key)), &A, &B)

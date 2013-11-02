@@ -11,7 +11,6 @@
 
 using namespace std;
 using namespace std::placeholders;
-using namespace upp11;
 
 CryptoEngineAVX2::CryptoEngineAVX2()
 {
