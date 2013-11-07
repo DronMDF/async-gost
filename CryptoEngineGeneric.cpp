@@ -136,8 +136,7 @@ static const auto encrypt_params = {
 	make_tuple(key05, 0x33333333U, 0xCCCCCCCCU, 0x4E790503U, 0x73FE0118U),
 };
 
-UP_PARAMETRIZED_TEST(encryptShouldBeCorrect, encrypt_params,
-		     vector<uint8_t>, uint32_t, uint32_t, uint32_t, uint32_t)
+UP_PARAMETRIZED_TEST(encryptShouldBeCorrect, encrypt_params)
 {
 	const auto key = get<0>(encrypt_params);
 	const auto A = get<1>(encrypt_params);
